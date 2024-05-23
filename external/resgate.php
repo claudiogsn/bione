@@ -85,7 +85,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         if($_POST['voucher_id'] == ''){
             http_response_code(400);
-            echo json_encode(array("message" => "Voucher não informado."));
+            echo json_encode(array("message" => "Voucher n informado."));
             exit;
         }
         $voucher_id = $_POST['voucher_id'];

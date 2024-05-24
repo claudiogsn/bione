@@ -1,11 +1,11 @@
 <?php
 /**
- * Cliente Active Record
+ * Evento Active Record
  * @author  <your-name-here>
  */
-class Cliente extends TRecord
+class Evento extends TRecord
 {
-    const TABLENAME = 'cliente';
+    const TABLENAME = 'evento';
     const PRIMARYKEY= 'id';
     const IDPOLICY =  'max'; // {max, serial}
     
@@ -17,17 +17,18 @@ class Cliente extends TRecord
     {
         parent::__construct($id, $callObjectLoad);
         parent::addAttribute('nome');
-        parent::addAttribute('telefone');
-        parent::addAttribute('email');
-        parent::addAttribute('cpf_cnpj');
+        parent::addAttribute('cliente_id');
+        parent::addAttribute('capacidade');
+        parent::addAttribute('data_inicio');
+        parent::addAttribute('data_fim');
         parent::addAttribute('created_at');
         parent::addAttribute('updated_at');
-        parent::addAttribute('status');
+        parent::addAttribute('local');
+        parent::addAttribute('cep');
         parent::addAttribute('endereco');
         parent::addAttribute('bairro');
         parent::addAttribute('cidade');
         parent::addAttribute('estado');
-        parent::addAttribute('cep');
     }
 
 

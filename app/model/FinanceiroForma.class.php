@@ -1,12 +1,12 @@
 <?php
 /**
- * Campanha Active Record
+ * FinanceiroForma Active Record
  * @author  <your-name-here>
  */
-class Campanha extends TRecord
+class FinanceiroForma extends TRecord
 {
-    const TABLENAME = 'campanha';
-    const PRIMARYKEY= 'campanha_id';
+    const TABLENAME = 'financeiro_forma';
+    const PRIMARYKEY= 'id';
     const IDPOLICY =  'max'; // {max, serial}
     
     
@@ -16,11 +16,13 @@ class Campanha extends TRecord
     public function __construct($id = NULL, $callObjectLoad = TRUE)
     {
         parent::__construct($id, $callObjectLoad);
+        parent::addAttribute('codigo');
+        parent::addAttribute('tipo');
         parent::addAttribute('nome');
         parent::addAttribute('descricao');
-        parent::addAttribute('data_inicio');
-        parent::addAttribute('data_fim');
-        parent::addAttribute('ativa');
+        parent::addAttribute('status');
+        parent::addAttribute('created_at');
+        parent::addAttribute('updated_at');
     }
 
 

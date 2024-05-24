@@ -1,6 +1,12 @@
 <?php
+header('Content-Type: application/json; charset=utf-8');
 
-$config = parse_ini_file('../app/config/communication.ini');
+$config = parse_ini_file(__DIR__ . '/../../../app/config/communication.ini'); // Caminho ajustado
+
+if ($config === false) {
+    http_response_code(500);
+    die("Erro ao ler o arquivo de configuração.");
+}
 
 $host = $config['host'];
 $port = $config['port'];
@@ -17,3 +23,4 @@ try {
     http_response_code(500);
     die("Erro ao conectar ao banco de dados: " . $e->getMessage());
 }
+?>

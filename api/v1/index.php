@@ -34,8 +34,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 break;
 
             case 'updateOrderItem':
-                if (isset($requestData['num_controle'])) {
-                    $response = OrderController::updateOrderItem($requestData['num_controle'], $requestData);
+                if (isset($requestData['id'])) {
+                    $response = OrderController::updateOrderItem($requestData['id'], $requestData);
                 } else {
                     http_response_code(400);
                     $response = array('error' => 'Parâmetro num_controle ausente');
@@ -47,8 +47,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 break;
 
             case 'updateOrderPayment':
-                if (isset($requestData['num_controle'])) {
-                    $response = OrderController::updateOrderPayment($requestData['num_controle'], $requestData);
+                if (isset($requestData['id'])) {
+                    $response = OrderController::updateOrderPayment($requestData['id'], $requestData);
                 } else {
                     http_response_code(400);
                     $response = array('error' => 'Parâmetro num_controle ausente');
@@ -60,8 +60,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 break;
 
             case 'updateOrderService':
-                if (isset($requestData['num_controle']) && isset($requestData['data'])) {
-                    $response = OrderController::updateOrderService($requestData['num_controle'], $requestData);
+                if (isset($requestData['id']) && isset($requestData)) {
+                    $response = OrderController::updateOrderService($requestData['id'], $requestData);
                 } else {
                     http_response_code(400);
                     $response = array('error' => 'Parâmetros num_controle ou data ausentes');

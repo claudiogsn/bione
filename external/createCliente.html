@@ -6,7 +6,7 @@
     <title>Cadastro de Cliente</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script defer src="form.js"></script>
+    <script defer src="script/createCliente.js"></script>
     <style>
         .loading {
             position: relative;
@@ -49,8 +49,8 @@
         <form id="clienteForm" class="space-y-4 mt-4">
             <fieldset class="space-y-2">
                 <legend class="block text-sm font-medium text-gray-700">Identificação</legend>
-                <label for="cpf_cnpj" class="block text-sm font-medium text-gray-700">CPF/CNPJ</label>
-                <input type="text" id="cpf" name="cpf_cnpj" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required>
+                <label for="cpf" class="block text-sm font-medium text-gray-700">CPF/CNPJ</label>
+                <input type="text" id="cpf" name="cpf_cnpj" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
             </fieldset>
 
             <fieldset id="personalInfo" class="space-y-4">

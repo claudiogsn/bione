@@ -45,7 +45,7 @@ class SystemSessionVarsView extends TPage
         $vars['userunitids'] = 'Retuns the user units ids';
         $vars['userroleids'] = 'Retuns the user roles ids';
         $vars['userroles'] = 'Retuns the user roles custom codes';
-        
+        $vars['sessionid'] = 'Session ID';
         
         foreach ($vars as $var => $description)
         {

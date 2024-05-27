@@ -1,1 +1,27 @@
 log.txt
+# Ignorar a pasta .idea
+.idea/
+
+# Ignorar arquivos de log
+*.log
+
+# Ignorar diretórios de cache
+.cache/
+tmp/
+
+# Ignorar dependências do Node.js
+node_modules/
+
+# Ignorar arquivos de build
+dist/
+build/
+
+# Ignorar arquivos de sistema do macOS
+.DS_Store
+
+# Ignorar arquivos de sistema do Windows
+Thumbs.db
+
+# Ignorar arquivos de sistema do Linux
+*.swp
+

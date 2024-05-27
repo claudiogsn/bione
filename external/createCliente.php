@@ -52,13 +52,10 @@
         
         <form id="clienteForm" class="space-y-6 mt-6">
             <fieldset class="space-y-2">
-                <legend class="block text-sm font-medium text-gray-700">Identificação</legend>
                 <label for="cpf" class="block text-sm font-medium text-gray-700">CPF/CNPJ</label>
                 <input type="text" id="cpf" name="cpf_cnpj" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
             </fieldset>
-
             <fieldset id="personalInfo" class="space-y-4">
-                <legend class="block text-sm font-medium text-gray-700">Dados Pessoais</legend>
                 <div class="space-y-2">
                     <label for="nome" class="block text-sm font-medium text-gray-700">Nome</label>
                     <input type="text" id="nome" name="nome" class="mt-1 block w-full p-2 border border-gray-300 rounded-md" required>
@@ -76,7 +73,6 @@
             </fieldset>
 
             <fieldset class="space-y-2">
-                <legend class="block text-sm font-medium text-gray-700">Endereço</legend>
                 <div class="space-y-2">
                     <label for="cep" class="block text-sm font-medium text-gray-700">CEP</label>
                     <input type="text" id="cep" name="cep" class="mt-1 block w-full p-2 border border-gray-300 rounded-md">
@@ -134,6 +130,8 @@
 </body>
 <script>
     const baseUrl = window.location.hostname !== 'localhost' ? 'https://binetecnologia.com.br/gestao' : 'http://localhost/bione';
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestToken = urlParams.get('token');
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('clienteForm');
@@ -202,6 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function fetchCpfData(cpf) {
         return axios.post(`${baseUrl}/api/v1/index.php`, {
+            token: requestToken,
             method: 'validateCPF',
             data: { cpf }
         }).then(response => response.data);
@@ -209,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function fetchCnpjData(cnpj) {
         return axios.post(`${baseUrl}/api/v1/index.php`, {
+            token: requestToken,
             method: 'validateCNPJ',
             data: { cnpj }
         }).then(response => response.data);
@@ -336,8 +336,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
             }
+           
 
             const data = {
+                token: requestToken,
                 method: 'createCliente',
                 data: {
                     nome: formData.get('nome'),

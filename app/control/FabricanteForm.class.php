@@ -43,10 +43,9 @@ class FabricanteForm extends TWindow
             $id->setEditable(FALSE);
         }
         
-        /** samples
-         $fieldX->addValidation( 'Field X', new TRequiredValidator ); // add validation
-         $fieldX->setSize( '100%' ); // set size
-         **/
+
+         //$fieldX->addValidation( 'Field X', new TRequiredValidator ); // add validation
+         //$fieldX->setSize( '100%' ); // set size
          
         // create the form actions
         $btn = $this->form->addAction(_t('Save'), new TAction([$this, 'onSave']), 'fa:save');
@@ -74,11 +73,9 @@ class FabricanteForm extends TWindow
         {
             TTransaction::open('communication'); // open a transaction
             
-            /**
             // Enable Debug logger for SQL operations inside the transaction
             TTransaction::setLogger(new TLoggerSTD); // standard output
             TTransaction::setLogger(new TLoggerTXT('log.txt')); // file
-            **/
             
             $this->form->validate(); // validate form data
             $data = $this->form->getData(); // get form data as array

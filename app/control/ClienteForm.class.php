@@ -7,12 +7,13 @@ class ClienteForm extends TPage
         parent::__construct();
 
         $username = TSession::getValue('username');
+        $token = TSession::getValue('sessionid');
 
 
         if($_SERVER['SERVER_NAME'] == "localhost"){
-            $link = "http://".$_SERVER['SERVER_NAME']."/bione/external/createCliente.php?username={$username}";
+            $link = "http://".$_SERVER['SERVER_NAME']."/bione/external/createCliente.php?username={$username}&token={$token}";
         }else{
-            $link = "https://".$_SERVER['SERVER_NAME']."/external/createCliente.php?username={$username}";
+            $link = "https://".$_SERVER['SERVER_NAME']."/external/createCliente.php?username={$username}&token={$token}";
         }
 
         $iframe = new TElement('iframe');

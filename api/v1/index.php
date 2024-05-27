@@ -11,6 +11,20 @@ $data = json_decode($json, true);
 if (isset($data['method']) && isset($data['data'])) {
     $method = $data['method'];
     $requestData = $data['data'];
+    $requestToken = $data['token'];
+
+    $noAuthMethods = ['validateCPF', 'validateCNPJ'];
+
+    if (!in_array($method, $noAuthMethods)) {
+        if (!isset($requestToken)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Token ausente']);
+            exit;
+        }
+
+        $userInfo = verifyToken($requestToken);
+        $user = $userInfo['user'];
+    }
 
     try {
         switch ($method) {
@@ -92,8 +106,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 }
                 break;
             case 'listClients':
-                    $response = ClienteController::listClients();
-                    break;
+                $response = ClienteController::listClients();
+                break;
 
             // Métodos para EventController
             case 'createEvent':
@@ -158,5 +172,32 @@ if (isset($data['method']) && isset($data['data'])) {
     header('Content-Type: application/json');
     http_response_code(400);
     echo json_encode(array('error' => 'Parâmetros inválidos'));
+}
+
+// Função de verificação do token
+function verifyToken($token) {
+    global $pdo;
+    $stmt = $pdo->prepare("SELECT * FROM system_access_log WHERE sessionid = :sessionid");
+    $stmt->bindParam(':sessionid', $token, PDO::PARAM_STR);
+    $stmt->execute();
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($result) {
+        if ($result['logout_time'] == "0000-00-00 00:00:00") {
+            if ($result['impersonated'] == 'S') {
+                return ['user' => $result['impersonated_by']];
+            } else {
+                return ['user' => $result['login']];
+            }
+        } else {
+            http_response_code(401);
+            echo json_encode(['error' => 'Sessão expirada']);
+            exit;
+        }
+    } else {
+        http_response_code(401);
+        echo json_encode(['error' => 'Usuário não encontrado']);
+        exit;
+    }
 }
 ?>

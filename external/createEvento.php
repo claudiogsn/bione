@@ -108,9 +108,10 @@
     </div>
     <script>
         const baseUrl = window.location.hostname !== 'localhost' ? 'https://binetecnologia.com.br/gestao' : 'http://localhost/bione';
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestToken = urlParams.get('token');
 
         document.addEventListener('DOMContentLoaded', () => {
-
             const form = document.getElementById('eventoForm');
     
             const cepInput = document.getElementById('cep');
@@ -186,6 +187,7 @@
             delay: 250,
             data: function (params) {
                 return JSON.stringify({ 
+                    token: requestToken,
                     method: 'listClients',
                     data: {} 
                 });
@@ -220,9 +222,12 @@
         const bairro = formData.get('bairro');
         const cidade = formData.get('cidade');
         const estado = formData.get('estado');
+        
 
         try {
+           
             const data = {
+                token: requestToken,
                 method: 'createEvent',
                 data: {
                     cliente_id: clienteId,

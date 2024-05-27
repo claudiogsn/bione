@@ -1,9 +1,9 @@
 <?php
 /**
- * VoucherForm Form
+ * CategoriaForm Form
  * @author  <your name here>
  */
-class VoucherForm extends TPage
+class CategoriaForm extends TWindow
 {
     protected $form; // form
     
@@ -15,49 +15,44 @@ class VoucherForm extends TPage
     {
         parent::__construct();
         
-        
+        //parent::setTargetContainer('adianti_right_panel');
+
         // creates the form
-        $this->form = new BootstrapFormBuilder('form_Voucher');
-        $this->form->setFormTitle('Voucher');
+        $this->form = new BootstrapFormBuilder('form_Categoria');
+        $this->form->setFormTitle('Categoria');
         
 
         // create the form fields
-        $voucher_id = new THidden('voucher_id');
-        $cpf_cliente = new TDBUniqueSearch('cpf_cliente', 'communication', 'Cliente', 'cpf', 'nome');
-        $campanha_id = new TDBUniqueSearch('campanha_id', 'communication', 'Campanha', 'campanha_id', 'nome');
-        $codigo = new TEntry('codigo');
+        $id = new THidden('id');
+        $nome = new TEntry('nome');
+        $tipo = new TCombo('tipo');
+        
+        
+        $options = ['Material' => 'Material', 'Servico' => 'Servico']; // Exemplo de opções estáticas
+        $tipo->addItems($options);
+        $tipo->enableSearch();
 
 
         // add the fields
-        $this->form->addFields( [ new TLabel('CLIENTE :') ], [ $cpf_cliente ] );
-        $this->form->addFields( [ new TLabel('CAMPANHA :') ], [ $campanha_id ] );
-        $this->form->addFields( [ new TLabel('VOUCHER: ') ], [ $codigo ] );
+        $this->form->addFields( [ new TLabel('') ], [ $id ] );
+        $this->form->addFields( [ new TLabel('Nome') ], [ $nome ] );
+        $this->form->addFields( [ new TLabel('Tipo') ], [ $tipo ] );
 
+        $nome->addValidation('Nome', new TRequiredValidator);
+        $tipo->addValidation('Tipo', new TRequiredValidator);
 
 
         // set sizes
-        $voucher_id->setSize('40%');
-        $cpf_cliente->setSize('40%');
-        $campanha_id->setSize('40%');
-        $codigo->setSize('40%');
+        $id->setSize('100%');
+        $nome->setSize('100%');
+        $tipo->setSize('100%');
 
 
 
-        if (!empty($voucher_id))
+        if (!empty($id))
         {
-            $voucher_id->setEditable(FALSE);
+            $id->setEditable(FALSE);
         }
-
-        if (!empty($cpf_cliente))
-        {
-            $cpf_cliente->setEditable(FALSE);
-        }
-
-        if (!empty($campanha_id))
-        {
-            $campanha_id->setEditable(FALSE);
-        }
-        
         
         /** samples
          $fieldX->addValidation( 'Field X', new TRequiredValidator ); // add validation
@@ -67,7 +62,7 @@ class VoucherForm extends TPage
         // create the form actions
         $btn = $this->form->addAction(_t('Save'), new TAction([$this, 'onSave']), 'fa:save');
         $btn->class = 'btn btn-sm btn-primary';
-        //$this->form->addActionLink(_t('New'),  new TAction([$this, 'onEdit']), 'fa:eraser red');
+        $this->form->addActionLink(_t('New'),  new TAction([$this, 'onEdit']), 'fa:eraser red');
         
         // vertical box container
         $container = new TVBox;
@@ -88,20 +83,21 @@ class VoucherForm extends TPage
         {
             TTransaction::open('communication'); // open a transaction
             
+            /**
             // Enable Debug logger for SQL operations inside the transaction
             TTransaction::setLogger(new TLoggerSTD); // standard output
             TTransaction::setLogger(new TLoggerTXT('log.txt')); // file
-            
+            **/
             
             $this->form->validate(); // validate form data
             $data = $this->form->getData(); // get form data as array
             
-            $object = new Voucher;  // create an empty object
+            $object = new Categoria;  // create an empty object
             $object->fromArray( (array) $data); // load the object with data
             $object->store(); // save the object
             
-            // get the generated voucher_id
-            $data->voucher_id = $object->voucher_id;
+            // get the generated id
+            $data->id = $object->id;
             
             $this->form->setData($data); // fill form data
             TTransaction::close(); // close the transaction
@@ -137,7 +133,7 @@ class VoucherForm extends TPage
             {
                 $key = $param['key'];  // get the parameter $key
                 TTransaction::open('communication'); // open a transaction
-                $object = new Voucher($key); // instantiates the Active Record
+                $object = new Categoria($key); // instantiates the Active Record
                 $this->form->setData($object); // fill the form
                 TTransaction::close(); // close the transaction
             }

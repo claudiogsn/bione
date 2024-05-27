@@ -1,5 +1,5 @@
 <?php
-class ResgateVoucher extends TPage
+class ClienteForm extends TPage
 {
     private $form;
     public function __construct($param)
@@ -10,9 +10,9 @@ class ResgateVoucher extends TPage
 
 
         if($_SERVER['SERVER_NAME'] == "localhost"){
-            $link = "http://".$_SERVER['SERVER_NAME']."/crm-deck/external/resgate.php?username={$username}";
+            $link = "http://".$_SERVER['SERVER_NAME']."/bione/external/createCliente.php?username={$username}";
         }else{
-            $link = "https://".$_SERVER['SERVER_NAME']."/external/resgate.php?username={$username}";
+            $link = "https://".$_SERVER['SERVER_NAME']."/external/createCliente.php?username={$username}";
         }
 
         $iframe = new TElement('iframe');
@@ -26,6 +26,9 @@ class ResgateVoucher extends TPage
         parent::add($iframe);
     }
     function onFeed($param){
-        $id = $param['key'];
+       // $id = $param['key'];
+    }
+    function onEdit($param){
+       // $id = $param['key'];
     }
 }

@@ -72,6 +72,16 @@ class ClienteController {
         }
     }
 
+    public static function listClients() {
+        global $pdo; 
+
+        // Prepara e executa a consulta SQL para listar todas as ordens de serviço
+        $stmt = $pdo->query("SELECT id,nome,cpf_cnpj FROM cliente ORDER BY nome ASC");
+
+        // Retorna um array contendo todas as ordens de serviço encontradas
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
     public static function validateCPF($cpf)
     {
         global $pdo;

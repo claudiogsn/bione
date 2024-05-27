@@ -17,9 +17,9 @@ class Material extends TRecord
     {
         parent::__construct($id, $callObjectLoad);
         parent::addAttribute('nome');
-        parent::addAttribute('fabricante');
+        parent::addAttribute('fabricante_id');
         parent::addAttribute('modelo');
-        parent::addAttribute('categoria');
+        parent::addAttribute('categoria_id');
         parent::addAttribute('saldo_estoque');
         parent::addAttribute('custo_material');
         parent::addAttribute('valor_locacao');

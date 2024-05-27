@@ -91,6 +91,9 @@ if (isset($data['method']) && isset($data['data'])) {
                     $response = array('error' => 'Parâmetro id ausente');
                 }
                 break;
+            case 'listClients':
+                    $response = ClienteController::listClients();
+                    break;
 
             // Métodos para EventController
             case 'createEvent':

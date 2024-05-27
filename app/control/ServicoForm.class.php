@@ -1,9 +1,9 @@
 <?php
 /**
- * ClienteForm Form
+ * ServicoForm Form
  * @author  <your name here>
  */
-class ClienteForm extends TPage
+class ServicoForm extends TPage
 {
     protected $form; // form
     
@@ -17,46 +17,54 @@ class ClienteForm extends TPage
         
         
         // creates the form
-        $this->form = new BootstrapFormBuilder('form_Cliente');
-        $this->form->setFormTitle('Cliente');
+        $this->form = new BootstrapFormBuilder('form_Servico');
+        $this->form->setFormTitle('Servico');
         
 
         // create the form fields
-        $cliente_id = new THidden('cliente_id');
-        $nome = new TEntry('nome');
-        $email = new TEntry('email');
-        $telefone = new TEntry('telefone');
-        $cpf = new TEntry('cpf');
-        $data_nascimento = new TDate('data_nascimento');
+        $id = new THidden('id');
+        $descricao = new TEntry('descricao');
+        $valor_servico = new TEntry('valor_servico');
+        $custo_servico = new TEntry('custo_servico');
+        $terceirizado = new TCombo('terceirizado');
+        $fornecedor_id = new TDBUniqueSearch('fornecedor_id', 'communication', 'FinanceiroFornecedor', 'id', 'nome');
+        
+        
+        $options = ['Sim' => 'Sim', 'Nao' => 'Nao']; 
+        $terceirizado->addItems($options);
+        $terceirizado->enableSearch();
+        $valor_servico->setNumericMask(2, ',', '.', true);
+        $custo_servico->setNumericMask(2, ',', '.', true);
 
 
         // add the fields
-        $this->form->addFields( [ new TLabel('Nome :') ], [ $nome ] );
-        $this->form->addFields( [ new TLabel('Email :') ], [ $email ] );
-        $this->form->addFields( [ new TLabel('Telefone :') ], [ $telefone ] );
-        $this->form->addFields( [ new TLabel('CPF :') ], [ $cpf ] );
-        $this->form->addFields( [ new TLabel('Data Nascimento :') ], [ $data_nascimento ] );
+        $this->form->addFields( [ new TLabel(' : ') ], [ $id ] );
+        $this->form->addFields( [ new TLabel('Descricao : ') ], [ $descricao ] );
+        $this->form->addFields( [ new TLabel('Valor Servico : ') ], [ $valor_servico ] );
+        $this->form->addFields( [ new TLabel('Custo Servico : ') ], [ $custo_servico ] );
+        $this->form->addFields( [ new TLabel('Terceirizado : ') ], [ $terceirizado ] );
+        $this->form->addFields( [ new TLabel('Fornecedor: ') ], [ $fornecedor_id ] );
 
+        $descricao->addValidation('Descricao', new TRequiredValidator);
+        $valor_servico->addValidation('Valor Servico', new TRequiredValidator);
+        $custo_servico->addValidation('Custo Servico', new TRequiredValidator);
+        $terceirizado->addValidation('Terceirizado', new TRequiredValidator);
+        $fornecedor_id->addValidation('Fornecedor Id', new TRequiredValidator);
 
 
         // set sizes
-        $cliente_id->setSize('50%');
-        $nome->setSize('50%');
-        $email->setSize('50%');
-        $telefone->setSize('50%');
-        $cpf->setSize('50%');
-        $data_nascimento->setSize('50%');
+        $id->setSize('50%');
+        $descricao->setSize('50%');
+        $valor_servico->setSize('50%');
+        $custo_servico->setSize('50%');
+        $terceirizado->setSize('50%');
+        $fornecedor_id->setSize('50%');
 
 
 
-        if (!empty($cliente_id))
+        if (!empty($id))
         {
-            $cliente_id->setEditable(FALSE);
-        }
-
-        if (!empty($cpf))
-        {
-            $cpf->setEditable(FALSE);
+            $id->setEditable(FALSE);
         }
         
         /** samples
@@ -88,21 +96,21 @@ class ClienteForm extends TPage
         {
             TTransaction::open('communication'); // open a transaction
             
-            
+            /**
             // Enable Debug logger for SQL operations inside the transaction
             TTransaction::setLogger(new TLoggerSTD); // standard output
             TTransaction::setLogger(new TLoggerTXT('log.txt')); // file
-            
+            **/
             
             $this->form->validate(); // validate form data
             $data = $this->form->getData(); // get form data as array
             
-            $object = new Cliente;  // create an empty object
+            $object = new Servico;  // create an empty object
             $object->fromArray( (array) $data); // load the object with data
             $object->store(); // save the object
             
-            // get the generated cliente_id
-            $data->cliente_id = $object->cliente_id;
+            // get the generated id
+            $data->id = $object->id;
             
             $this->form->setData($data); // fill form data
             TTransaction::close(); // close the transaction
@@ -138,7 +146,7 @@ class ClienteForm extends TPage
             {
                 $key = $param['key'];  // get the parameter $key
                 TTransaction::open('communication'); // open a transaction
-                $object = new Cliente($key); // instantiates the Active Record
+                $object = new Servico($key); // instantiates the Active Record
                 $this->form->setData($object); // fill the form
                 TTransaction::close(); // close the transaction
             }

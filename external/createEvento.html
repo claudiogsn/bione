@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Evento</title>
+    <meta content="width=device-width, initial-scale=1" name="viewport" />
+
+    <!-- AdminBSB Styles -->
+    <link href="bsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bsb/plugins/node-waves/waves.css" rel="stylesheet">
+    <link href="bsb/plugins/animate-css/animate.css" rel="stylesheet">
+    <link href="bsb/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <link href="bsb/css/style.css" rel="stylesheet">
+    <link href="bsb/css/themes/all-themes.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <!-- Select2 -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="bsb/plugins/node-waves/waves.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+
+    <style>
+        .form-control {
+            display: block;
+            width: 100%;
+            height: 34px;
+            padding: 6px 12px;
+            font-size: 14px;
+            line-height: 1.42857143;
+            color: #555;
+            background-color: #fff;
+            background-image: none;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+            -webkit-transition: border-color ease-in-out .15s, -webkit-box-shadow ease-in-out .15s;
+            -o-transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+            transition: border-color ease-in-out .15s, box-shadow ease-in-out .15s;
+        }
+        .form-control:focus {
+            border-color: #66afe9;
+            outline: 0;
+            -webkit-box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+            box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+        }
+
+    </style>
+</head>
+<body class="theme-blue">
+<br>
+<div class="container-fluid">
+    <div class="row clearfix">
+        <div class="col-xs-12">
+            <div class="card" style="margin: 0;">
+                <div class="header">
+                    <h2>Cadastro de Evento</h2>
+                </div>
+                <div class="body">
+                    <form id="eventoForm">
+
+                        <!-- Nome, Cliente, Capacidade -->
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label for="nome">Nome do Evento</label>
+                                <input type="text" class="form-control" id="nome" name="nome" required />
+                                <input type="hidden" name="place_url" id="place_url">
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="cliente_id">Cliente</label>
+                                <select id="cliente_id" required name="cliente_id" class="form-control" style="width: 100%;"></select>
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="capacidade">Capacidade</label>
+                                <input type="number" inputmode="numeric" class="form-control" id="capacidade" name="capacidade" required />
+                            </div>
+                        </div>
+
+                        <!-- Data início, Data fim -->
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <label for="data_inicio">Data de Início</label>
+                                <input type="datetime-local" class="form-control" id="data_inicio" name="data_inicio" required />
+                            </div>
+                            <div class="col-sm-6">
+                                <label for="data_fim">Data de Término</label>
+                                <input type="datetime-local" class="form-control" id="data_fim" name="data_fim" required />
+                            </div>
+                        </div>
+
+                        <!-- Local, CEP -->
+                        <div class="row">
+                            <div class="col-sm-9">
+                                <label for="local">Local do Evento</label>
+                                <input type="text" class="form-control" id="local" name="local" required />
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="cep">CEP</label>
+                                <input type="text" class="form-control cep" id="cep" name="cep" />
+                            </div>
+                        </div>
+
+                        <!-- Endereço, Número -->
+                        <div class="row">
+                            <div class="col-sm-9">
+                                <label for="endereco">Endereço</label>
+                                <input type="text" class="form-control" id="endereco" name="endereco" />
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="numero">Número</label>
+                                <input type="text" class="form-control" id="numero" name="numero" />
+                            </div>
+                        </div>
+
+                        <!-- Bairro, Cidade, Estado -->
+                        <div class="row">
+                            <div class="col-sm-5">
+                                <label for="bairro">Bairro</label>
+                                <input type="text" class="form-control" id="bairro" name="bairro" />
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="cidade">Cidade</label>
+                                <input type="text" class="form-control" id="cidade" name="cidade" />
+                            </div>
+                            <div class="col-sm-3">
+                                <label for="estado">Estado</label>
+                                <input type="text" class="form-control" id="estado" name="estado" />
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block waves-effect">Cadastrar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCR1Ah_f24oWlsWaOoZf1rqIPuTzS0nyA8&libraries=places"></script>
+
+
+<script>
+    const baseUrl = window.location.hostname !== 'localhost' ? 'https://bionetecnologia.com.br/crm' : 'http://localhost/bione';
+    const urlParams = new URLSearchParams(window.location.search);
+    const requestToken = urlParams.get('token');
+    const userId = urlParams.get('username');
+
+
+    $(document).ready(function () {
+        $('.cep').mask('00000-000');
+
+        $('#cliente_id').select2({
+            placeholder: 'Selecione um cliente',
+            allowClear: true,
+            width: 'resolve',
+            ajax: {
+                url: `${baseUrl}/api/v1/index.php`,
+                type: 'POST',
+                contentType: 'application/json',
+                dataType: 'json',
+                delay: 250,
+                data: function () {
+                    return JSON.stringify({
+                        token: requestToken,
+                        method: 'listClients',
+                        data: {}
+                    });
+                },
+                processResults: function (data) {
+                    if (data.success && Array.isArray(data.clients)) {
+                        return {
+                            results: data.clients.map(cli => ({
+                                id: cli.id,
+                                text: `${cli.nome} - ${cli.cpf_cnpj}`
+                            }))
+                        };
+                    } else {
+                        return { results: [] };
+                    }
+                }
+            }
+        });
+
+
+        $('#cep').on('blur', function () {
+            const cep = $(this).val().replace(/\D/g, '');
+            if (cep.length === 8) {
+                axios.get(`https://viacep.com.br/ws/${cep}/json`).then(resp => {
+                    if (!resp.data.erro) {
+                        $('#endereco').val(resp.data.logradouro);
+                        $('#bairro').val(resp.data.bairro);
+                        $('#cidade').val(resp.data.localidade);
+                        $('#estado').val(resp.data.uf);
+                    } else {
+                        Swal.fire('CEP não encontrado', '', 'warning');
+                    }
+                }).catch(() => {
+                    Swal.fire('Erro ao consultar o CEP', '', 'error');
+                });
+            }
+        });
+
+        $('#eventoForm').on('submit', function (e) {
+            e.preventDefault();
+
+            const data = {
+                token: requestToken,
+                method: 'createEvent',
+                data: {
+                    cliente_id: $('#cliente_id').val(),
+                    nome: $('#nome').val(),
+                    capacidade: $('#capacidade').val(),
+                    data_inicio: $('#data_inicio').val(),
+                    data_fim: $('#data_fim').val(),
+                    local: $('#local').val(),
+                    cep: $('#cep').val().replace(/\D/g, ''),
+                    endereco: $('#endereco').val(),
+                    numero: $('#numero').val(),
+                    bairro: $('#bairro').val(),
+                    cidade: $('#cidade').val(),
+                    estado: $('#estado').val(),
+                    place_url: $('#place_url').val(),
+                    usuario_id: userId
+                }
+            };
+
+            axios.post(`${baseUrl}/api/v1/index.php`, data)
+                .then(res => {
+                    if (res.data.success) {
+                        Swal.fire('Sucesso!', 'Evento criado com sucesso!', 'success');
+                        $('#eventoForm')[0].reset();
+                        $('#cliente_id').val(null).trigger('change');
+                    } else {
+                        Swal.fire('Erro', res.data.message || 'Erro ao criar o evento.', 'error');
+                    }
+                }).catch(() => {
+                Swal.fire('Erro', 'Falha na requisição.', 'error');
+            });
+        });
+    });
+
+    // GOOGLE AUTOCOMPLETE PARA LOCAL DO EVENTO
+    function initAutocomplete() {
+        const input = document.getElementById('local');
+        if (!input) return;
+
+        const autocomplete = new google.maps.places.Autocomplete(input, {
+            types: ['geocode', 'establishment'],
+            componentRestrictions: { country: 'br' }
+        });
+
+        autocomplete.addListener('place_changed', function () {
+            const place = autocomplete.getPlace();
+            const comp = place.address_components;
+            const placeId = place.place_id;
+
+            const get = (type) =>
+                comp?.find(c => c.types.includes(type))?.long_name || '';
+
+            $('#endereco').val(get('route'));
+            $('#numero').val(get('street_number'));
+            $('#bairro').val(get('sublocality') || get('political') || '');
+            $('#cidade').val(get('administrative_area_level_2'));
+            $('#estado').val(get('administrative_area_level_1'));
+            $('#cep').val(get('postal_code'));
+
+            // Buscar URL do local usando Place Details API
+            if (placeId) {
+                axios.get(`${baseUrl}/proxy/place-details.php`, {
+                    params: { place_id: placeId }
+                }).then(res => {
+                    const url = res.data.result?.url || '';
+                    $('#place_url').val(url);
+                }).catch(err => {
+                    console.error('Erro ao buscar URL do local:', err);
+                });
+            }
+        });
+    }
+
+
+    // Inicializar autocomplete após carregamento da página
+    google.maps.event.addDomListener(window, 'load', initAutocomplete);
+
+</script>
+
+</body>
+</html>

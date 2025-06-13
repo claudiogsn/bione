@@ -72,14 +72,25 @@ class ClienteController {
         }
     }
 
+//    public static function listClients() {
+//        global $pdo;
+//
+//        // Prepara e executa a consulta SQL para listar todas as ordens de serviço
+//        $stmt = $pdo->query("SELECT id,nome,cpf_cnpj FROM cliente ORDER BY nome ASC");
+//
+//        // Retorna um array contendo todas as ordens de serviço encontradas
+//        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+//    }
+
     public static function listClients() {
-        global $pdo; 
-
-        // Prepara e executa a consulta SQL para listar todas as ordens de serviço
-        $stmt = $pdo->query("SELECT id,nome,cpf_cnpj FROM cliente ORDER BY nome ASC");
-
-        // Retorna um array contendo todas as ordens de serviço encontradas
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        try {
+            global $pdo;
+            $stmt = $pdo->query("SELECT * FROM cliente ORDER BY nome ASC");
+            $clientes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ['success' => true, 'clients' => $clientes];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Erro ao listar clientes: ' . $e->getMessage()];
+        }
     }
 
     public static function validateCPF($cpf)

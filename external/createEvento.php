@@ -107,7 +107,7 @@
         </form>
     </div>
     <script>
-        const baseUrl = window.location.hostname !== 'localhost' ? 'https://binetecnologia.com.br/gestao' : 'http://localhost/bione';
+        const baseUrl = window.location.hostname !== 'localhost' ? 'https://binetecnologia.com.br/crm' : 'http://localhost/bione';
         const urlParams = new URLSearchParams(window.location.search);
         const requestToken = urlParams.get('token');
 

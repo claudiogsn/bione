@@ -3,9 +3,9 @@
 require_once __DIR__ . '/../database/db.php'; // Ajustando o caminho para o arquivo db.php
 
 class EventController {
-    
+
     public static function createEvent($data) {
-        global $pdo; 
+        global $pdo;
 
         // Extrair os dados da requisição
         $nome = $data['nome'];
@@ -19,17 +19,28 @@ class EventController {
         $bairro = $data['bairro'];
         $cidade = $data['cidade'];
         $estado = $data['estado'];
+        $place_url = $data['place_url'] ?? null;
+        $usuario_id = $data['usuario_id'] ?? null;
 
-        // Preparar e executar a consulta SQL para inserir um novo evento no banco de dados
-        $stmt = $pdo->prepare("INSERT INTO evento (nome, cliente_id, capacidade, data_inicio, data_fim, local, cep, endereco, bairro, cidade, estado) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$nome, $cliente_id, $capacidade, $data_inicio, $data_fim, $local, $cep, $endereco, $bairro, $cidade, $estado]);
+        // Inserção no banco
+        $stmt = $pdo->prepare("INSERT INTO evento (
+        nome, cliente_id, capacidade, data_inicio, data_fim,
+        local, cep, endereco, bairro, cidade, estado, place_url, usuario_id
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+        $stmt->execute([
+            $nome, $cliente_id, $capacidade, $data_inicio, $data_fim,
+            $local, $cep, $endereco, $bairro, $cidade, $estado,
+            $place_url, $usuario_id
+        ]);
 
         if ($stmt->rowCount() > 0) {
-            return array('success' => true, 'message' => 'Evento criado com sucesso','event_id' => $pdo->lastInsertId());
+            return ['success' => true, 'message' => 'Evento criado com sucesso', 'event_id' => $pdo->lastInsertId()];
         } else {
-            return array('success' => false, 'message' => 'Falha ao criar evento');
+            return ['success' => false, 'message' => 'Falha ao criar evento'];
         }
     }
+
 
     public static function updateEvent($id, $data) {
         global $pdo;
@@ -85,5 +96,45 @@ class EventController {
             return array('success' => false, 'message' => 'Falha ao excluir evento');
         }
     }
+
+    public static function listEvents($data = []) {
+        try {
+            global $pdo;
+
+            $where = [];
+            $params = [];
+
+            if (!empty($data['data_inicio'])) {
+                $where[] = "e.data_inicio >= :data_inicio";
+                $params[':data_inicio'] = $data['data_inicio'];
+            }
+
+            if (!empty($data['data_fim'])) {
+                $where[] = "e.data_inicio <= :data_fim";
+                $params[':data_fim'] = $data['data_fim'];
+            }
+
+            $whereClause = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+            $stmt = $pdo->prepare("
+            SELECT 
+                e.*,
+                c.id AS cliente_id,
+                c.nome AS cliente_nome
+            FROM evento e
+            LEFT JOIN cliente c ON c.id = e.cliente_id
+            $whereClause
+            ORDER BY e.data_inicio DESC
+        ");
+
+            $stmt->execute($params);
+            $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return ['success' => true, 'events' => $events];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Erro ao listar eventos: ' . $e->getMessage()];
+        }
+    }
+
 }
 ?>

@@ -7,60 +7,78 @@ class OrderController {
     
     // Função para criar uma nova ordem de serviço
     public static function createOrder($data) {
-        global $pdo; 
-    
+        global $pdo;
+
         $evento_id = $data['evento_id'];
         $cliente_id = $data['cliente_id'];
         $data_montagem = $data['data_montagem'];
         $data_recolhimento = $data['data_recolhimento'];
-        $status = 1;
+        $status = 1; // Status padrão (1 = "Ativo"? Ajuste conforme sua regra)
         $contato_montagem = $data['contato_montagem'];
         $local_montagem = $data['local_montagem'];
         $endereco = $data['endereco'];
-    
+
         try {
-            // Inicia uma transação
+            // Inicia transação
             $pdo->beginTransaction();
-    
-            // Insere a ordem de serviço
-            $stmt = $pdo->prepare("INSERT INTO orders (evento_id, cliente_id, data_montagem, data_recolhimento, status, contato_montagem, local_montagem, endereco) VALUES (:evento_id, :cliente_id, :data_montagem, :data_recolhimento, :status, :contato_montagem, :local_montagem, :endereco)");
-            $stmt->bindParam(':evento_id', $evento_id, PDO::PARAM_INT);
-            $stmt->bindParam(':cliente_id', $cliente_id, PDO::PARAM_INT);
-            $stmt->bindParam(':data_montagem', $data_montagem, PDO::PARAM_STR);
-            $stmt->bindParam(':data_recolhimento', $data_recolhimento, PDO::PARAM_STR);
-            $stmt->bindParam(':status', $status, PDO::PARAM_INT);
-            $stmt->bindParam(':contato_montagem', $contato_montagem, PDO::PARAM_STR);
-            $stmt->bindParam(':local_montagem', $local_montagem, PDO::PARAM_STR);
-            $stmt->bindParam(':endereco', $endereco, PDO::PARAM_STR);
-            $stmt->execute();
-    
-            // Verifica se o insert foi bem-sucedido
-            if ($stmt->rowCount() > 0) {
-                // Obtém o ID da ordem inserida
-                $order_id = $pdo->lastInsertId();
-    
-                // Atualiza o campo num_controle com o ID da ordem
-                $updateStmt = $pdo->prepare("UPDATE orders SET num_controle = :order_id WHERE id = :order_id");
-                $updateStmt->bindParam(':order_id', $order_id, PDO::PARAM_INT);
-                $updateStmt->execute();
-    
-                // Confirma a transação
-                $pdo->commit();
-    
-                // Retorna a mensagem de sucesso e o objeto da order criada
-                return array('success' => true, 'message' => 'Ordem de serviço criada com sucesso', 'order' => self::getOrderById($order_id));
-            } else {
-                // Caso contrário, cancela a transação
-                $pdo->rollBack();
-                return array('success' => false, 'message' => 'Falha ao criar ordem de serviço');
-            }
+
+            // Insere a ordem (SEM documento e num_controle inicialmente)
+            $stmt = $pdo->prepare("
+            INSERT INTO orders 
+            (evento_id, cliente_id, data_montagem, data_recolhimento, status, contato_montagem, local_montagem, endereco) 
+            VALUES 
+            (:evento_id, :cliente_id, :data_montagem, :data_recolhimento, :status, :contato_montagem, :local_montagem, :endereco)
+        ");
+            $stmt->execute([
+                ':evento_id' => $evento_id,
+                ':cliente_id' => $cliente_id,
+                ':data_montagem' => $data_montagem,
+                ':data_recolhimento' => $data_recolhimento,
+                ':status' => $status,
+                ':contato_montagem' => $contato_montagem,
+                ':local_montagem' => $local_montagem,
+                ':endereco' => $endereco
+            ]);
+
+            // Obtém o ID da nova ordem
+            $order_id = $pdo->lastInsertId();
+
+            // Gera o documento (formato: OS-505013)
+            $documento = 'OS-' .
+                str_pad($cliente_id, 2, '0', STR_PAD_LEFT) .
+                str_pad($evento_id, 2, '0', STR_PAD_LEFT) .
+                str_pad($order_id, 2, '0', STR_PAD_LEFT);
+
+            // Atualiza a ordem com num_controle e documento
+            $updateStmt = $pdo->prepare("
+            UPDATE orders 
+            SET 
+                num_controle = :order_id,
+                documento = :documento
+            WHERE id = :order_id
+        ");
+            $updateStmt->execute([
+                ':order_id' => $order_id,
+                ':documento' => $documento
+            ]);
+
+            // Confirma a transação
+            $pdo->commit();
+
+            return [
+                'success' => true,
+                'message' => 'Ordem criada com sucesso',
+                'order' => self::getOrderById($order_id) // Retorna os dados completos
+            ];
+
         } catch (PDOException $e) {
-            // Em caso de erro, cancela a transação e retorna a mensagem de erro
             $pdo->rollBack();
-            return array('success' => false, 'message' => 'Erro ao criar ordem de serviço: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Erro ao criar ordem: ' . $e->getMessage()
+            ];
         }
     }
-
     public static function getOrderById($id) {
         global $pdo; 
     
@@ -72,7 +90,6 @@ class OrderController {
         // Retorna os detalhes da ordem de serviço encontrada
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
-    
 
     // Função para obter detalhes de uma ordem de serviço
     public static function getOrderDetails($order_id) {
@@ -120,8 +137,6 @@ class OrderController {
         // Retorna os detalhes do pedido
         return $orderDetails;
     }
-    
-    
 
     // Função para atualizar os detalhes de uma ordem de serviço
     public static function updateOrder($id, $data) {
@@ -149,14 +164,16 @@ class OrderController {
     }
 
     // Função para listar todas as ordens de serviço
-    public static function listOrders() {
-        global $pdo; 
+    public static function listOrders($evento_id) {
+        global $pdo;
 
         // Prepara e executa a consulta SQL para listar todas as ordens de serviço
-        $stmt = $pdo->query("SELECT * FROM orders");
+        $stmt = $pdo->prepare("SELECT * FROM orders WHERE evento_id = :evento_id");
+        $stmt->bindParam(':evento_id', $evento_id, PDO::PARAM_INT);
+        $stmt->execute();
 
-        // Retorna um array contendo todas as ordens de serviço encontradas
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        // Retorna os detalhes da ordem de serviço encontrada
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Use fetchAll() se esperar múltiplos resultados
     }
 
     public static function createOrderItem($data) {
@@ -318,6 +335,73 @@ class OrderController {
             return array('success' => true, 'message' => 'Serviço de pedido atualizado com sucesso');
         } else {
             return array('error' => 'Falha ao atualizar serviço de pedido');
+        }
+    }
+
+    // Listar materiais
+    public static function listMaterials($dataEvento = null) {
+        try {
+            global $pdo;
+
+            if (!$dataEvento) {
+                $dataEvento = date('Y-m-d');
+            }
+
+            $stmt = $pdo->prepare("
+            SELECT 
+                m.*,
+                COUNT(mp.id) AS quantidade_total,
+                IFNULL(SUM(oi.quantidade), 0) AS quantidade_reservada,
+                (COUNT(mp.id) - IFNULL(SUM(oi.quantidade), 0)) AS quantidade_disponivel
+            FROM material m
+            LEFT JOIN material_patrimonio mp ON mp.material_id = m.id
+            LEFT JOIN (
+                SELECT 
+                    material_id, 
+                    SUM(quantidade) AS quantidade
+                FROM order_itens
+                WHERE :dataEvento BETWEEN DATE(data_inicial) AND DATE(data_final)
+                GROUP BY material_id
+            ) oi ON oi.material_id = m.id
+            GROUP BY m.id
+        ");
+
+            $stmt->execute([
+                ':dataEvento' => $dataEvento
+            ]);
+
+            $materials = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return ['success' => true, 'materials' => $materials];
+
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Erro ao listar materiais: ' . $e->getMessage()];
+        }
+    }
+
+
+    // Listar serviços
+    public static function listServices() {
+        try {
+            global $pdo;
+            $stmt = $pdo->query("SELECT * FROM servico");
+            $services = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ['success' => true, 'services' => $services];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Erro ao listar serviços: ' . $e->getMessage()];
+        }
+    }
+
+
+    // Listar opções de recebimento (pagamentos)
+    public static function listPaymentMethods() {
+        try {
+            global $pdo;
+            $stmt = $pdo->query("SELECT * FROM opcoes_recebimento");
+            $payments = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            return ['success' => true, 'payment_methods' => $payments];
+        } catch (Exception $e) {
+            return ['success' => false, 'message' => 'Erro ao listar opções de pagamento: ' . $e->getMessage()];
         }
     }
 }

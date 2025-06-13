@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Listagem de Eventos</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="bsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bsb/plugins/node-waves/waves.css" rel="stylesheet">
+    <link href="bsb/plugins/animate-css/animate.css" rel="stylesheet">
+    <link href="bsb/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <link href="bsb/css/style.css" rel="stylesheet">
+    <link href="bsb/css/themes/all-themes.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="bsb/plugins/node-waves/waves.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="theme-blue">
+
+<div class="container-fluid">
+    <br>
+    <div class="card">
+        <div class="header">
+            <h2>Eventos</h2>
+        </div>
+        <div class="body">
+            <div class="row clearfix">
+                <div class="col-md-3">
+                    <label for="filtroDataInicio">Data Início</label>
+                    <input type="datetime-local" id="filtroDataInicio" class="form-control">
+                </div>
+                <div class="col-md-3">
+                    <label for="filtroDataFim">Data Fim</label>
+                    <input type="datetime-local" id="filtroDataFim" class="form-control">
+                </div>
+                <div class="col-md-1">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-primary btn-block" id="btnFiltrar">Filtrar</button>
+                </div>
+                <div class="col-md-1">
+                    <label>&nbsp;</label>
+                    <button class="btn btn-success btn-block" id="btnNovoEvento">Novo</button>
+                </div>
+
+            </div>
+            <br>
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped" id="tabela-eventos">
+                    <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Cliente</th>
+                        <th>Início</th>
+                        <th>Fim</th>
+                        <th>Local</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <td colspan="7" class="text-center">Carregando...</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ADICIONE DENTRO DO <body> ANTES DO </body> -->
+<div class="modal fade" id="eventoModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Detalhes do Evento</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Abas -->
+                <ul class="nav nav-tabs" role="tablist">
+                    <li role="presentation" class="active">
+                        <a href="#dadosEvento" aria-controls="dadosEvento" role="tab" data-toggle="tab">Dados</a>
+                    </li>
+                    <li role="presentation">
+                        <a href="#ordensServico" aria-controls="ordensServico" role="tab" data-toggle="tab">Ordens de Serviço</a>
+                    </li>
+                </ul>
+
+                <!-- Conteúdo das Abas -->
+                <div class="tab-content mt-3">
+                    <div role="tabpanel" class="tab-pane active" id="dadosEvento">
+                        <div id="dadosEventoContainer"></div>
+                    </div>
+                    <div role="tabpanel" class="tab-pane" id="ordensServico">
+                        <table class="table table-bordered table-sm" id="tabelaOrdens">
+                            <thead>
+                            <tr>
+                                <th>Documento</th>
+                                <th>Montagem</th>
+                                <th>Recolhimento</th>
+                                <th>Contato</th>
+                                <th>Endereço</th>
+                            </tr>
+                            </thead>
+                            <tbody><tr><td colspan="5">Carregando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalNovoEvento" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-body" style="padding:0;">
+                <iframe id="iframeNovoEvento" src="" style="width:100%; height:85vh; border:none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    const baseUrl = window.location.hostname !== 'localhost'
+        ? 'https://binetecnologia.com.br/crm/api/v1/index.php'
+        : 'http://localhost/bione/api/v1/index.php';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    const baseUrlredirect = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/external'
+        : 'http://localhost/bione/external';
+
+    $('#btnNovoEvento').click(() => {
+        const username = urlParams.get('username');
+        const iframeUrl = `${baseUrlredirect}/createEvento.html?username=${username}&token=${token}`;
+        $('#iframeNovoEvento').attr('src', iframeUrl);
+        $('#modalNovoEvento').modal('show');
+    });
+
+    $(document).ready(() => {
+        $('#btnFiltrar').click(listarEventos);
+        listarEventos();
+    });
+
+    async function listarEventos() {
+        const data_inicio = $('#filtroDataInicio').val();
+        const data_fim = $('#filtroDataFim').val();
+
+        try {
+            const res = await axios.post(baseUrl, {
+                method: 'listEvents',
+                token,
+                data: {
+                    data_inicio: data_inicio || undefined,
+                    data_fim: data_fim || undefined
+                }
+            });
+
+            const eventos = res.data.events;
+            const tbody = $('#tabela-eventos tbody');
+            tbody.empty();
+
+            if (!eventos || eventos.length === 0) {
+                return tbody.append('<tr><td colspan="7" class="text-center">Nenhum evento encontrado.</td></tr>');
+            }
+
+            eventos.forEach(e => {
+                const placePopover = e.place_url
+                    ? `<span
+            data-toggle="popover"
+            data-trigger="hover"
+            data-placement="top"
+            data-html="true"
+            title="Local no Google Maps"
+            data-content="<a href='${e.place_url}' target='_blank' class='btn btn-sm btn-primary'>Abrir no Google Maps</a>">
+            ${e.local}
+       </span>`
+                    : (e.local ?? '-');
+
+
+                const row = `
+                    <tr>
+                      <td>${e.nome}</td>
+                      <td>${e.cliente_nome}</td>
+                      <td>${formatarData(e.data_inicio)}</td>
+                      <td>${formatarData(e.data_fim)}</td>
+                      <td>
+                        ${e.place_url ? `<span data-toggle="popover" data-trigger="hover" data-placement="top" data-html="true" title="Google Maps" data-content="<a href='${e.place_url}' target='_blank' class='btn btn-sm btn-primary'>Abrir Mapa</a>">${e.local}</span>` : (e.local ?? '-')}
+                      </td>
+                      <td>
+                        <button class="btn btn-sm btn-info" onclick='abrirModalDetalhes(${JSON.stringify(e)})'>Ver Detalhes</button>
+                      </td>
+                    </tr>
+                    `;
+                tbody.append(row);
+
+            });
+
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Erro', 'Não foi possível carregar os eventos.', 'error');
+        }
+    }
+
+    function abrirModalDetalhes(evento) {
+        // Popular aba de dados
+        const html = `
+    <p><strong>Nome:</strong> ${evento.nome}</p>
+    <p><strong>Cliente:</strong> ${evento.cliente_nome}</p>
+    <p><strong>Capacidade:</strong> ${evento.capacidade || '-'}</p>
+    <p><strong>Datas:</strong> ${formatarData(evento.data_inicio)} até ${formatarData(evento.data_fim)}</p>
+    <p><strong>Local:</strong> ${evento.local || '-'}</p>
+    <p><strong>Endereço:</strong> ${evento.endereco || '-'}, ${evento.bairro || ''}, ${evento.cidade || ''} - ${evento.estado || ''}</p>
+    ${evento.place_url ? `<p><a href="${evento.place_url}" target="_blank" class="btn btn-sm btn-primary">Abrir no Google Maps</a></p>` : ''}
+  `;
+        $('#dadosEventoContainer').html(html);
+
+        // Reset tabela ordens
+        $('#tabelaOrdens tbody').html('<tr><td colspan="5">Carregando...</td></tr>');
+
+        // Carregar ordens de serviço
+        axios.post(baseUrl, {
+            method: 'listOrders',
+            token,
+            data: { evento_id: evento.id }
+        }).then(res => {
+            const ordens = res.data || [];
+            if (ordens.length === 0) {
+                return $('#tabelaOrdens tbody').html('<tr><td colspan="5">Nenhuma OS encontrada.</td></tr>');
+            }
+            const linhas = ordens.map(o => `
+      <tr>
+        <td>${o.documento}</td>
+        <td>${formatarData(o.data_montagem)}</td>
+        <td>${formatarData(o.data_recolhimento)}</td>
+        <td>${o.contato_montagem}</td>
+        <td>${o.local_montagem || o.endereco}</td>
+      </tr>
+    `).join('');
+            $('#tabelaOrdens tbody').html(linhas);
+        }).catch(() => {
+            $('#tabelaOrdens tbody').html('<tr><td colspan="5">Erro ao carregar ordens.</td></tr>');
+        });
+
+        $('#eventoModal').modal('show');
+    }
+
+
+    $(function () {
+        $('body').popover({
+            selector: '[data-toggle="popover"]',
+            container: 'body',
+            html: true
+        });
+    });
+    
+    $('#modalNovoEvento').on('hidden.bs.modal', function () {
+        listarEventos(); // Recarrega a tabela após fechar o modal
+        $('#iframeNovoEvento').attr('src', ''); // Limpa o iframe para evitar carregamentos desnecessários
+    });
+
+
+    function formatarData(data) {
+        if (!data) return '-';
+        const d = new Date(data);
+        return d.toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'});
+    }
+</script>
+
+</body>
+</html>

@@ -82,7 +82,19 @@ if (isset($data['method']) && isset($data['data'])) {
                 }
                 break;
             case 'listOrders':
-                $response = OrderController::listOrders();
+                $response = OrderController::listOrders($requestData['evento_id']);
+                break;
+
+            case 'listMaterials':
+                $response = OrderController::listMaterials();
+                break;
+
+            case 'listServices':
+                $response = OrderController::listServices();
+                break;
+            
+            case 'listPaymentMethods':
+                $response = OrderController::listPaymentMethods();
                 break;
 
             // Métodos para ClienteController
@@ -136,6 +148,9 @@ if (isset($data['method']) && isset($data['data'])) {
                     http_response_code(400);
                     $response = array('error' => 'Parâmetro id ausente');
                 }
+                break;
+            case 'listEvents':
+                $response = EventController::listEvents($requestData);
                 break;
 
             case 'validateCPF':

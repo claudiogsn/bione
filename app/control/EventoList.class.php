@@ -16,9 +16,9 @@ class EventoList extends TPage
         $token = TSession::getValue('sessionid');
 
         if ($_SERVER['SERVER_NAME'] == "localhost") {
-            $link = "http://" . $_SERVER['SERVER_NAME'] . "/bione/external/listEventos.html?username={$username}&token={$token}";
+            $link = "http://localhost/bione/external/listEventos.html?username={$username}&token={$token}";
         } else {
-            $link = "https://" . $_SERVER['SERVER_NAME'] . "/external/listEventos.html?username={$username}&token={$token}";
+            $link = "https://bionetecnologia.com.br/crm/external/listEventos.html?username={$username}&token={$token}";
         }
 
         $iframe = new TElement('iframe');

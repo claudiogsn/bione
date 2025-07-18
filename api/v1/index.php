@@ -1,9 +1,10 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 
-require_once 'controllers/OrderController.php';
+require_once 'controllers/OrderServiceController.php';
 require_once 'controllers/ClienteController.php';
 require_once 'controllers/EventController.php';
+require_once 'controllers/MaterialController.php';
 
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
@@ -11,9 +12,11 @@ $data = json_decode($json, true);
 if (isset($data['method']) && isset($data['data'])) {
     $method = $data['method'];
     $requestData = $data['data'];
-    $requestToken = $data['token'];
+    if (isset($data['token'])) {
+        $requestToken = $data['token'];
+    }
 
-    $noAuthMethods = ['validateCPF', 'validateCNPJ'];
+    $noAuthMethods = ['validateCPF', 'validateCNPJ','getOrderDetailsByControle'];
 
     if (!in_array($method, $noAuthMethods)) {
         if (!isset($requestToken)) {
@@ -28,73 +31,206 @@ if (isset($data['method']) && isset($data['data'])) {
 
     try {
         switch ($method) {
-            // Métodos para OrderController
-            case 'createOrder':
-                $response = OrderController::createOrder($requestData);
+            // Métodos para MaterialController
+            case 'createMaterial':
+                $response = MaterialController::createMaterial($requestData);
                 break;
-            case 'updateOrder':
-                if (isset($requestData['id']) && isset($requestData)) {
-                    $response = OrderController::updateOrder($requestData['id'], $requestData);
+
+            case 'updateMaterial':
+                if (isset($requestData['id'], $requestData['data'])) {
+                    $response = MaterialController::updateMaterial($requestData['id'], $requestData['data']);
                 } else {
-                    http_response_code(400);
-                    $response = array('error' => 'Parâmetros order_id ou data ausentes');
+                    throw new Exception("Campos obrigatórios: id e data.");
                 }
                 break;
-            case 'createOrderItem':
-                $response = OrderController::createOrderItem($requestData);
-                break;
-            case 'updateOrderItem':
+
+            case 'deleteMaterial':
                 if (isset($requestData['id'])) {
-                    $response = OrderController::updateOrderItem($requestData['id'], $requestData);
+                    $response = MaterialController::deleteMaterial($requestData['id']);
                 } else {
-                    http_response_code(400);
-                    $response = array('error' => 'Parâmetro id ausente');
+                    throw new Exception("Campo obrigatório: id.");
                 }
                 break;
-            case 'createOrderPayment':
-                $response = OrderController::createOrderPayment($requestData);
-                break;
-            case 'updateOrderPayment':
+
+            case 'getMaterial':
                 if (isset($requestData['id'])) {
-                    $response = OrderController::updateOrderPayment($requestData['id'], $requestData);
+                    $response = MaterialController::getMaterialById($requestData['id']);
                 } else {
-                    http_response_code(400);
-                    $response = array('error' => 'Parâmetro id ausente');
+                    throw new Exception("Campo obrigatório: id.");
                 }
                 break;
-            case 'createOrderService':
-                $response = OrderController::createOrderService($requestData);
-                break;
-            case 'updateOrderService':
-                if (isset($requestData['id']) && isset($requestData)) {
-                    $response = OrderController::updateOrderService($requestData['id'], $requestData);
+
+                // Métodos para PatrimonioController
+            case 'addPatrimonio':
+                if (isset($requestData['material_id'], $requestData['data'])) {
+                    $response = MaterialController::addPatrimonio($requestData['material_id'], $requestData['data']);
                 } else {
-                    http_response_code(400);
-                    $response = array('error' => 'Parâmetros id ou data ausentes');
+                    throw new Exception("Campos obrigatórios: material_id e data.");
                 }
                 break;
-            case 'getOrderDetails':
-                if (isset($requestData['order_id'])) {
-                    $response = OrderController::getOrderDetails($requestData['order_id']);
+
+            case 'updatePatrimonio':
+                if (isset($requestData['id'], $requestData['data'])) {
+                    $response = MaterialController::updatePatrimonio($requestData['id'], $requestData['data']);
                 } else {
-                    http_response_code(400);
-                    $response = array('error' => 'Parâmetro order_id ausente');
+                    throw new Exception("Campos obrigatórios: id e data.");
                 }
                 break;
-            case 'listOrders':
-                $response = OrderController::listOrders($requestData['evento_id']);
+
+            case 'deletePatrimonio':
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::deletePatrimonio($requestData['id']);
+                } else {
+                    throw new Exception("Campo obrigatório: id.");
+                }
                 break;
+
+            case 'listPatrimonios':
+                if (isset($requestData['material_id'])) {
+                    $response = MaterialController::listPatrimoniosByMaterial($requestData['material_id']);
+                } else {
+                    throw new Exception("Campo obrigatório: material_id.");
+                }
+                break;
+
+            case 'listPatrimoniosAgrupado':
+                if (isset($requestData['material_id'])) {
+                    $response = MaterialController::listPatrimoniosAgrupadosPorModelo($requestData['material_id']);
+                } else {
+                    throw new Exception("Campo obrigatório: material_id.");
+                }
+                break;
+
+            case 'createCategoria':
+                if (isset($requestData['nome'], $requestData['tipo'])) {
+                    $response = MaterialController::createCategoria($requestData);
+                } else {
+                    throw new Exception("Campos obrigatórios: nome e tipo.");
+                }
+                break;
+
+            case 'updateCategoria':
+                if (isset($requestData['id'], $requestData['data'])) {
+                    $response = MaterialController::updateCategoria($requestData['id'], $requestData['data']);
+                } else {
+                    throw new Exception("Campos obrigatórios: id e data.");
+                }
+                break;
+
+            case 'getCategoria':
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::getCategoriaById($requestData['id']);
+                } else {
+                    throw new Exception("Campo obrigatório: id.");
+                }
+                break;
+
+            case 'listCategorias':
+                $response = MaterialController::listCategorias($requestData['tipo'] ?? null);
+                break;
+            case 'createFabricante':
+                if (isset($requestData['nome'])) {
+                    $response = MaterialController::createFabricante($requestData);
+                } else {
+                    throw new Exception("Campo obrigatório: nome.");
+                }
+                break;
+
+            case 'updateFabricante':
+                if (isset($requestData['id'], $requestData['data'])) {
+                    $response = MaterialController::updateFabricante($requestData['id'], $requestData['data']);
+                } else {
+                    throw new Exception("Campos obrigatórios: id e data.");
+                }
+                break;
+
+            case 'getFabricante':
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::getFabricanteById($requestData['id']);
+                } else {
+                    throw new Exception("Campo obrigatório: id.");
+                }
+                break;
+
+            case 'deleteFabricante':
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::deleteFabricante($requestData['id']);
+                } else {
+                    throw new Exception("Campo obrigatório: id.");
+                }
+                break;
+
+            case 'listFabricantes':
+                $response = MaterialController::listFabricantes();
+                break;
+
+            case 'createServico':
+                if (isset($requestData['descricao'])) {
+                    $response = MaterialController::createServico($requestData);
+                } else {
+                    throw new Exception("Campo obrigatório: descricao.");
+                }
+                break;
+
+            case 'updateServico':
+                if (isset($requestData['id'], $requestData['data'])) {
+                    $response = MaterialController::updateServico($requestData['id'], $requestData['data']);
+                } else {
+                    throw new Exception("Campos obrigatórios: id e data.");
+                }
+                break;
+
+            case 'deleteServico':
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::deleteServico($requestData['id']);
+                } else {
+                    throw new Exception("Campo obrigatório: id.");
+                }
+                break;
+
+            case 'getServico':
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::getServicoById($requestData['id']);
+                } else {
+                    throw new Exception("Campo obrigatório: id.");
+                }
+                break;
+
+            case 'listServicos':
+                $response = MaterialController::listServicos($requestData ?? []);
+                break;
+
 
             case 'listMaterials':
-                $response = OrderController::listMaterials();
+                $response = MaterialController::listMaterials($requestData ?? []);
                 break;
 
-            case 'listServices':
-                $response = OrderController::listServices();
+                // Métodos para OrderServiceController
+
+            case 'createOrUpdateOrder':
+                $response = OrderServiceController::createOrUpdateOrder($requestData);
                 break;
-            
-            case 'listPaymentMethods':
-                $response = OrderController::listPaymentMethods();
+
+            case 'getOrderDetailsByControle':
+                if (isset($requestData['num_controle'])) {
+                    $response = OrderServiceController::getOrderDetailsByControle($requestData['num_controle']);
+                } else {
+                    throw new Exception("Campo obrigatório: num_controle");
+                }
+                break;
+
+            case 'listOrdersByEvento':
+                if (isset($requestData['evento_id'])) {
+                    $response = OrderServiceController::listOrdersByEvento($requestData['evento_id']);
+                } else {
+                    throw new Exception("Campo obrigatório: evento_id");
+                }
+                break;
+            case 'listOrdersByPeriodo':
+                $response = OrderServiceController::listOrdersByPeriodo($requestData);
+                break;
+            case 'listMetodosPagamento':
+                $response = OrderServiceController::listMetodosPagamento();
                 break;
 
             // Métodos para ClienteController

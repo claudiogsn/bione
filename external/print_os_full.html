@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>PDF Ordem de Serviço</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Calibri, sans-serif;
+            font-size: 12px;
+            padding: 15px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+        table, th, td {
+            border: 0.1px solid #000;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 5px;
+            text-align: left;
+        }
+        h2 { margin: 8px 0; }
+        .rodape {
+            text-align: center;
+            font-size: 10px;
+            margin-top: 30px;
+            page-break-inside: avoid;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .header img {
+            height: 100px;
+        }
+    </style>
+</head>
+<body>
+<div id="conteudo-pdf"></div>
+
+<script>
+    const baseUrl = location.hostname.includes('localhost')
+        ? 'http://localhost/bione/api/v1/index.php'
+        : 'https://bionetecnologia.com.br/crm/api/v1/index.php';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const controle = urlParams.get('num_controle');
+
+    function formatDate(dateStr, showTime = true, onlyDayMonth = false) {
+        const dt = new Date(dateStr);
+        const options = { timeZone: 'America/Recife' };
+
+        if (onlyDayMonth) {
+            const dia = String(dt.getDate()).padStart(2, '0');
+            const mes = String(dt.getMonth() + 1).padStart(2, '0');
+            return `${dia}/${mes}`;
+        }
+
+        const data = dt.toLocaleDateString('pt-BR', options);
+        const hora = dt.toLocaleTimeString('pt-BR', options).slice(0, 5);
+
+        return showTime ? `${data} ${hora}` : data;
+    }
+
+
+
+    function formatMoney(value) {
+        return `R$ ${parseFloat(value).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+    }
+
+    async function gerarPDFBlob(html) {
+        const arrayBuffer = await html2pdf()
+            .from(html)
+            .set({
+                margin: [10, 10, 10, 10],
+                image: { type: 'jpeg', quality: 1 },          // qualidade máxima da imagem
+                html2canvas: { scale: 2.5, useCORS: true },   // aumenta a resolução da captura
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            })
+            .output('arraybuffer');
+
+        return new File([arrayBuffer], `Ordem_${controle}.pdf`, { type: 'application/pdf' });
+    }
+
+    async function gerarPDF() {
+        const { data } = await axios.post(baseUrl, {
+            method: 'getOrderDetailsByControle',
+            data: { num_controle: controle }
+        });
+
+        if (!data.success) return Swal.fire('Erro', 'Dados não encontrados', 'error');
+
+        const { order, cliente, evento, itens, services, payments } = data.details;
+
+        let html = `
+            <div class="header">
+                <div>
+                    <h2>Ordem de Serviço</h2>
+                    <div><b>Cliente:</b> ${cliente.nome}</div>
+                    <div><b>CNPJ:</b> ${cliente.cpf_cnpj}</div>
+                    <div><b>Telefone:</b> ${cliente.telefone}</div>
+                    <div><b>Email:</b> ${cliente.email}</div>
+                </div>
+                <div><img src="imagens/logo_os.png"></div>
+            </div>
+            <center><h2>${order.documento}</h2></center>
+            <div><b>Evento:</b> ${evento.nome}</div>
+            <div><b>Local:</b> ${evento.local}</div>
+            <div><b>Endereço:</b> ${evento.endereco}</div>
+            <div><b>Periodo:</b> ${formatDate(evento.data_inicio)} à ${formatDate(evento.data_fim,false)}</div>
+            <div><hr></div>
+            <div><b>Local:</b> ${order.local_montagem}</div>
+            <div><b>Montagem:</b> ${formatDate(order.data_montagem)} <b>Recolhimento:</b> ${formatDate(order.data_recolhimento,false)}</div>
+            <div><b>Contato:</b> ${order.contato_montagem}</div>
+            <h3>Itens</h3>
+            <table>
+                <thead style="background-image: url('imagens/bg.jpg'); background-size: cover; color: white;"><tr><th>Descrição</th><th>Qtd</th><th>Periodo</th><th>Valor</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                ${itens.map(i => `
+                    <tr>
+                        <td>${i.descricao}</td>
+                        <td>${i.quantidade}</td>
+                        <td>${formatDate(i.data_inicial,false,true)} - ${formatDate(i.data_final,false,true)}</td>
+                        <td>${formatMoney(i.valor)}</td>
+                        <td>${formatMoney(i.quantidade * i.valor)}</td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+
+            <h3>Serviços</h3>
+            <table>
+                <thead style="background-image: url('imagens/bg.jpg'); background-size: cover; color: white;"><tr><th>Serviço</th><th>Qtd</th><th>Periodo</th><th>Valor</th><th>Subtotal</th></tr></thead>
+                <tbody>
+                ${services.map(s => `
+                    <tr>
+                        <td>${s.descricao}</td>
+                        <td>${s.quantidade}</td>
+                        <td>${formatDate(s.data_inicial,false,true)}</td>
+                        <td>${formatMoney(s.valor)}</td>
+                        <td>${formatMoney(s.quantidade * s.valor)}</td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+
+            <h3>Pagamentos</h3>
+            <table>
+                <thead style="background-image: url('imagens/bg.jpg'); background-size: cover; color: white;"><tr><th>Forma</th><th>Valor</th><th>Data</th></tr></thead>
+                <tbody>
+                ${payments.map(p => `
+                    <tr>
+                        <td>${p.forma_nome} - ${p.forma_descricao}</td>
+                        <td>${formatMoney(p.valor_pg)}</td>
+                        <td>${formatDate(p.data_pg, false)}</td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+            <br>
+            <br>
+
+            <div><b>Observação:</b></div>
+            <div>${order.observacao || 'Nenhuma observação.'}</div>
+
+            <div class="rodape">
+                Bione Alugueis e Servicos de Informatica LTDA / CNPJ: 11.204.447/0001-07<br>
+                Rua Luiza Maria da Conceicao, 187, Renascer - Cabedelo – PB<br>
+                FONE: (83) 98871-9620
+            </div>
+        `;
+
+        const container = document.getElementById('conteudo-pdf');
+        container.innerHTML = html;
+
+        const file = await gerarPDFBlob(container);
+
+        const resumo = `
+        📄 *Ordem de Serviço*
+
+        👤 *Cliente:* ${cliente.nome}
+        🆔 *Documento:* ${cliente.cpf_cnpj}
+        📍 *Local:* ${order.place_url || 'Sem URL'}
+        📅 *Montagem:* ${formatDate(order.data_montagem, false)}
+
+        Acesse: ${order.place_url || 'URL não disponível'}
+        `;
+
+        Swal.fire({
+            title: 'O que deseja fazer?',
+            icon: 'question',
+            showDenyButton: true,
+            confirmButtonText: '📥 Baixar PDF',
+            denyButtonText: '🔗 Compartilhar PDF'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } else if (result.isDenied) {
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    await navigator.share({
+                        title: 'Ordem de Serviço',
+                        text: resumo,
+                        files: [file]
+                    });
+                } else {
+                    Swal.fire('Erro', 'Seu navegador não suporta compartilhamento de arquivos.', 'error');
+                }
+            }
+        });
+
+    }
+
+    gerarPDF();
+</script>
+</body>
+</html>

@@ -70,7 +70,7 @@
         : 'https://bionetecnologia.com.br/crm/api/v1/index.php';
 
     const urlParams = new URLSearchParams(window.location.search);
-    const controle = urlParams.get('num_controle');
+    const documento = urlParams.get('documento');
 
     function formatDate(dateStr, showTime = true, onlyDayMonth = false) {
         const dt = new Date(dateStr);
@@ -110,8 +110,8 @@
 
     async function gerarPDF() {
         const { data } = await axios.post(baseUrl, {
-            method: 'getOrderDetailsByControle',
-            data: { num_controle: controle }
+            method: 'getOrderDetailsByDocumento',
+            data: { documento: documento }
         });
 
         if (!data.success) return Swal.fire('Erro', 'Dados não encontrados', 'error');
@@ -142,15 +142,13 @@
             <div><b>Contato:</b> ${order.contato_montagem}</div>
             <h3>Itens</h3>
             <table>
-                <thead style="background-image: url('imagens/bg.jpg'); background-size: cover; color: white;"><tr><th>Descrição</th><th>Qtd</th><th>Periodo</th><th>Valor</th><th>Subtotal</th></tr></thead>
+                <thead style="background-image: url('imagens/bg.jpg'); background-size: cover; color: white;"><tr><th>Descrição</th><th>Qtd</th><th>Periodo</th></tr></thead>
                 <tbody>
                 ${itens.map(i => `
                     <tr>
                         <td>${i.descricao}</td>
                         <td>${i.quantidade}</td>
                         <td>${formatDate(i.data_inicial,false,true)} - ${formatDate(i.data_final,false,true)}</td>
-                        <td>${formatMoney(i.valor)}</td>
-                        <td>${formatMoney(i.quantidade * i.valor)}</td>
                     </tr>
                 `).join('')}
                 </tbody>
@@ -158,29 +156,13 @@
 
             <h3>Serviços</h3>
             <table>
-                <thead style="background-image: url('imagens/bg.jpg'); background-size: cover; color: white;"><tr><th>Serviço</th><th>Qtd</th><th>Periodo</th><th>Valor</th><th>Subtotal</th></tr></thead>
+                <thead style="background-image: url('imagens/bg.jpg'); background-size: cover; color: white;"><tr><th>Serviço</th><th>Qtd</th><th>Periodo</th></tr></thead>
                 <tbody>
                 ${services.map(s => `
                     <tr>
                         <td>${s.descricao}</td>
                         <td>${s.quantidade}</td>
                         <td>${formatDate(s.data_inicial,false,true)}</td>
-                        <td>${formatMoney(s.valor)}</td>
-                        <td>${formatMoney(s.quantidade * s.valor)}</td>
-                    </tr>
-                `).join('')}
-                </tbody>
-            </table>
-
-            <h3>Pagamentos</h3>
-            <table>
-                <thead style="background-image: url('imagens/bg.jpg'); background-size: cover; color: white;"><tr><th>Forma</th><th>Valor</th><th>Data</th></tr></thead>
-                <tbody>
-                ${payments.map(p => `
-                    <tr>
-                        <td>${p.forma_nome} - ${p.forma_descricao}</td>
-                        <td>${formatMoney(p.valor_pg)}</td>
-                        <td>${formatDate(p.data_pg, false)}</td>
                     </tr>
                 `).join('')}
                 </tbody>
@@ -219,12 +201,10 @@
 
         const resumo = `
         📄 *Ordem de Serviço*
-
         👤 *Cliente:* ${cliente.nome}
-        🆔 *Documento:* ${cliente.cpf_cnpj}
+        🆔 *Documento:* ${order.documento}
         📍 *Local:* ${order.place_url || 'Sem URL'}
-        📅 *Montagem:* ${formatDate(order.data_montagem, false)}
-
+        📅 *Montagem:* ${formatDate(order.data_montagem)}
         Acesse: ${order.place_url || 'URL não disponível'}
         `;
 

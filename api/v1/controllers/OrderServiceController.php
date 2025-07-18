@@ -207,6 +207,74 @@ class OrderServiceController
         return ['success' => true, 'details' => $details];
     }
 
+    public static function getOrderDetailsByDocumento($documento)
+    {
+        global $pdo;
+
+        $details = [];
+
+        // Remove o prefixo "OS-" se existir
+        $numero = preg_replace('/^OS-/', '', $documento);
+
+        // Busca a ordem comparando com e sem o prefixo "OS-"
+        $stmtOrder = $pdo->prepare("
+        SELECT * FROM orders 
+        WHERE documento = :completo 
+           OR REPLACE(documento, 'OS-', '') = :numero
+        LIMIT 1
+    ");
+        $stmtOrder->execute([
+            'completo' => $documento,
+            'numero'   => $numero
+        ]);
+        $details['order'] = $stmtOrder->fetch(PDO::FETCH_ASSOC);
+
+        if (!$details['order']) {
+            return ['success' => false, 'message' => 'Ordem não encontrada'];
+        }
+
+        $cliente_id = $details['order']['cliente_id'];
+        $evento_id = $details['order']['evento_id'];
+        $num_controle = $details['order']['num_controle'];
+
+        $stmtCliente = $pdo->prepare("SELECT * FROM cliente WHERE id = ?");
+        $stmtCliente->execute([$cliente_id]);
+        $details['cliente'] = $stmtCliente->fetch(PDO::FETCH_ASSOC);
+
+        $stmtEvento = $pdo->prepare("SELECT * FROM evento WHERE id = ?");
+        $stmtEvento->execute([$evento_id]);
+        $details['evento'] = $stmtEvento->fetch(PDO::FETCH_ASSOC);
+
+        $stmtItens = $pdo->prepare("SELECT * FROM order_itens WHERE num_controle = ?");
+        $stmtItens->execute([$num_controle]);
+        $details['itens'] = $stmtItens->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtServicos = $pdo->prepare("
+        SELECT 
+            os.*, 
+            s.descricao 
+        FROM order_services os
+        LEFT JOIN servico s ON os.servico_id = s.id
+        WHERE os.num_controle = ?
+    ");
+        $stmtServicos->execute([$num_controle]);
+        $details['services'] = $stmtServicos->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmtPagamentos = $pdo->prepare("
+        SELECT 
+            op.*, 
+            orp.nome AS forma_nome,
+            orp.descricao AS forma_descricao
+        FROM order_pagamentos op
+        LEFT JOIN opcoes_recebimento orp ON op.forma_pg = orp.id
+        WHERE op.num_controle = ?
+    ");
+        $stmtPagamentos->execute([$num_controle]);
+        $details['payments'] = $stmtPagamentos->fetchAll(PDO::FETCH_ASSOC);
+
+        return ['success' => true, 'details' => $details];
+    }
+
     public static function listOrdersByEvento($evento_id)
     {
         global $pdo;

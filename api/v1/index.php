@@ -16,7 +16,7 @@ if (isset($data['method']) && isset($data['data'])) {
         $requestToken = $data['token'];
     }
 
-    $noAuthMethods = ['validateCPF', 'validateCNPJ','getOrderDetailsByControle'];
+    $noAuthMethods = ['validateCPF', 'validateCNPJ','getOrderDetailsByControle','getOrderDetailsByDocumento'];
 
     if (!in_array($method, $noAuthMethods)) {
         if (!isset($requestToken)) {
@@ -216,6 +216,13 @@ if (isset($data['method']) && isset($data['data'])) {
                     $response = OrderServiceController::getOrderDetailsByControle($requestData['num_controle']);
                 } else {
                     throw new Exception("Campo obrigatório: num_controle");
+                }
+                break;
+            case 'getOrderDetailsByDocumento':
+                if (isset($requestData['documento'])) {
+                    $response = OrderServiceController::getOrderDetailsByDocumento($requestData['documento']);
+                } else {
+                    throw new Exception("Campo obrigatório: documento");
                 }
                 break;
 

@@ -110,7 +110,7 @@
 
     async function gerarPDF() {
         const { data } = await axios.post(baseUrl, {
-            method: 'documento',
+            method: 'getOrderDetailsByDocumento',
             data: { documento: documento }
         });
 

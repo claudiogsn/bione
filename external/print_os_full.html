@@ -70,7 +70,7 @@
         : 'https://bionetecnologia.com.br/crm/api/v1/index.php';
 
     const urlParams = new URLSearchParams(window.location.search);
-    const controle = urlParams.get('num_controle');
+    const documento = urlParams.get('documento');
 
     function formatDate(dateStr, showTime = true, onlyDayMonth = false) {
         const dt = new Date(dateStr);
@@ -110,8 +110,8 @@
 
     async function gerarPDF() {
         const { data } = await axios.post(baseUrl, {
-            method: 'getOrderDetailsByControle',
-            data: { num_controle: controle }
+            method: 'documento',
+            data: { documento: documento }
         });
 
         if (!data.success) return Swal.fire('Erro', 'Dados não encontrados', 'error');

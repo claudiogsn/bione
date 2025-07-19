@@ -30,7 +30,7 @@
         <icon>fas:bullhorn fa-fw</icon>
       </menuitem>
       <menuitem label="Ordem de Serviço">
-        <action>VoucherList</action>
+        <action>ListOrders</action>
         <icon>fas:address-card fa-fw</icon>
       </menuitem>
     </menu>

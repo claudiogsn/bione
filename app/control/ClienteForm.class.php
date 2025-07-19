@@ -10,10 +10,10 @@ class ClienteForm extends TPage
         $token = TSession::getValue('sessionid');
 
 
-        if($_SERVER['SERVER_NAME'] == "localhost"){
-            $link = "http://".$_SERVER['SERVER_NAME']."/bione/external/createCliente.php?username={$username}&token={$token}";
-        }else{
-            $link = "https://".$_SERVER['SERVER_NAME']."/external/createCliente.php?username={$username}&token={$token}";
+        if ($_SERVER['SERVER_NAME'] == "localhost") {
+            $link = "http://localhost/bione/external/createCliente.php?username={$username}&token={$token}";
+        } else {
+            $link = "https://bionetecnologia.com.br/crm/external/createCliente.php?username={$username}&token={$token}";
         }
 
         $iframe = new TElement('iframe');

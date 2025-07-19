@@ -6,14 +6,14 @@ class ListOrders extends TPage
     {
         parent::__construct();
 
-        $username = TSession::getValue('username');
+        $userid = TSession::getValue('userid');
         $token = TSession::getValue('sessionid');
 
 
         if($_SERVER['SERVER_NAME'] == "localhost"){
-            $link = "http://localhost/bione/external/listOrdem.html?user={$username}&token={$token}";
+            $link = "http://localhost/bione/external/listOrdem.html?user={$userid}&token={$token}";
         }else{
-            $link = "https://bionetecnologia.com.br/crm/external/listOrdem.html?user={$username}&token={$token}";
+            $link = "https://bionetecnologia.com.br/crm/external/listOrdem.html?user={$userid}&token={$token}";
         }
 
         $iframe = new TElement('iframe');

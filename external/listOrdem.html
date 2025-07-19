@@ -70,6 +70,30 @@
         </div>
     </div>
 </div>
+<!-- Modal Detalhes Ordem -->
+<div class="modal fade" id="modalDetalhesOrdem" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document"> <!-- Aumenta a largura -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modalLabel">Detalhes da OS</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body" id="conteudoOrdem">
+                <!-- Conteúdo será preenchido dinamicamente via JS -->
+            </div>
+
+            <div class="modal-footer" id="footerStatus" style="display: none;">
+                <!-- Select e botão são preenchidos dinamicamente via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
 
 <script>
     const baseUrl = window.location.hostname !== 'localhost'
@@ -84,6 +108,16 @@
     const token = urlParams.get('token');
     const user = urlParams.get('user');
     let hasPermition = null;
+
+    const statusMap = {
+        "0": { label: "Removida", color: "danger" },
+        "1": { label: "Em Aprovação", color: "warning" },
+        "2": { label: "Aprovada", color: "info" },
+        "3": { label: "Em Montagem", color: "primary" },
+        "4": { label: "Em Andamento", color: "blue" },
+        "5": { label: "Finalizada", color: "success" }
+    };
+
 
 
     $(document).ready(() => {
@@ -111,6 +145,37 @@
         carregarOrdens();
     });
 
+    async function alterarStatusOrdem(documento) {
+        const novoStatus = $('#statusSelect').val();
+
+        if (!novoStatus) {
+            return Swal.fire('Erro', 'Selecione um status.', 'warning');
+        }
+
+        try {
+            const res = await axios.post(baseUrl, {
+                method: 'updateStatusByDocumento',
+                token,
+                data: {
+                    documento,
+                    status: novoStatus
+                }
+            });
+
+            if (res.data.success) {
+                Swal.fire('Sucesso', 'Status atualizado com sucesso.', 'success');
+                $('#modalDetalhesOrdem').modal('hide');
+                carregarOrdens(); // Se tiver uma função para recarregar a lista
+            } else {
+                throw new Error(res.data.message || 'Erro ao atualizar status');
+            }
+        } catch (err) {
+            Swal.fire('Erro', 'Erro ao atualizar status.', 'error');
+        }
+    }
+
+
+
     async function carregarOrdens() {
         const data_inicio = $('#dataInicio').val();
         const data_fim = $('#dataFim').val();
@@ -130,9 +195,8 @@
             tbody.empty();
 
             res.data.orders.forEach(ordem => {
-                const statusHtml = ordem.status === "1"
-                    ? '<span class="label label-success">Ativa</span>'
-                    : '<span class="label label-danger">Inativa</span>';
+                const statusObj = statusMap[ordem.status] || { label: "Desconhecido", color: "default" };
+                const statusHtml = `<span class="label label-${statusObj.color}">${statusObj.label}</span>`;
 
                 const colEditar = hasPermition
                     ? `<a href="#" onclick="editarOrdem('${ordem.documento}')" title="Editar">
@@ -147,7 +211,7 @@
                     : '';
 
                 const row = `
-            <tr>
+            <tr onclick="abrirModalOrdem('${ordem.documento}')" style="cursor: pointer;">
                 <td class="text-center">${colEditar}</td>
                 <td class="text-center"><a href="#" onclick="exportarOrdem('${ordem.documento}')" title="Exportar OS"><i class="fas fa-file-pdf red"></i></a></td>
                 <td class="text-center">${colDetalhada}</td>
@@ -209,6 +273,124 @@
             hasPermition = null;
         }
     }
+
+    async function abrirModalOrdem(documento) {
+        try {
+            const res = await axios.post(baseUrl, {
+                method: 'getOrderDetailsByDocumento',
+                token,
+                data: { documento }
+            });
+
+            if (!res.data.success) {
+                throw new Error("Erro ao carregar detalhes");
+            }
+
+            const { order, cliente, evento, itens, services, payments } = res.data.details;
+
+            const statusMap = {
+                "0": { label: "Removida", color: "danger" },
+                "1": { label: "Em Aprovação", color: "warning" },
+                "2": { label: "Aprovada", color: "info" },
+                "3": { label: "Em Montagem", color: "primary" },
+                "4": { label: "Em Andamento", color: "blue" },
+                "5": { label: "Finalizada", color: "success" }
+            };
+
+            const status = statusMap[order.status] || { label: "Desconhecido", color: "default" };
+
+            const html = `
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#tab-cabecalho" data-toggle="tab">Cabeçalho</a></li>
+                <li role="presentation"><a href="#tab-itens" data-toggle="tab">Itens e Serviços</a></li>
+                ${hasPermition ? `<li role="presentation"><a href="#tab-pagamentos" data-toggle="tab">Pagamentos</a></li>` : ''}
+            </ul>
+
+            <div class="tab-content" style="margin-top: 15px;">
+                <div role="tabpanel" class="tab-pane active" id="tab-cabecalho">
+                    <h5><strong>Ordem:</strong> ${order.documento} <span class="label label-${status.color}">${status.label}</span></h5>
+                    <hr>
+                    <p><strong>Evento:</strong> ${evento.nome}</p>
+                    <p><strong>Local:</strong> ${evento.local}</p>
+                    <p><strong>Maps: </strong><a href="${evento.place_url}" target="_blank">${evento.place_url}</a></p>
+                    <p><strong>Período:</strong> ${formatarData(evento.data_inicio)} até ${formatarData(evento.data_fim)}</p>
+                    <hr>
+                    <p><strong>Cliente:</strong> ${cliente.nome}</p>
+                    <p><strong>Telefone:</strong> ${cliente.telefone}</p>
+                    <p><strong>Endereço:</strong> ${cliente.endereco}, ${cliente.bairro}, ${cliente.cidade} - ${cliente.estado}</p>
+                    <hr>
+                     <p><strong>Contato Montagem:</strong> ${order.contato_montagem}</p>
+                     <p><strong>Local Montagem:</strong> ${order.local_montagem}</p>
+                    <p><strong>Observaçoes:</strong> ${order.observacao}</p>
+                    <p><strong>Data Montagem:</strong> ${formatarData(order.data_montagem)}</p>
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="tab-itens">
+                    <h6><strong>Itens</strong></h6>
+                    <table class="table table-striped table-hover">
+                        <thead><tr><th>Descrição</th><th>Quantidade</th><th>Dias Uso</th></tr></thead>
+                        <tbody>
+                            ${itens.map(i => `<tr><td>${i.descricao}</td><td>${i.quantidade}</td><td>${i.dias_uso}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                    <h6><strong>Serviços</strong></h6>
+                    <table class="table table-striped table-hover">
+                        <thead><tr><th>Descrição</th><th>Quantidade</th><th>Dias Uso</th></tr></thead>
+                        <tbody>
+                            ${services.map(s => `<tr><td>${s.descricao}</td><td>${s.quantidade}</td><td>${s.dias_uso}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                ${hasPermition ? `
+                <div role="tabpanel" class="tab-pane" id="tab-pagamentos">
+                    <table class="table table-striped table-hover">
+                        <thead><tr><th>Data</th><th>Valor</th><th>Forma</th></tr></thead>
+                        <tbody>
+                            ${payments.map(p => `
+                                <tr>
+                                    <td>${formatarData(p.data_pg)}</td>
+                                    <td>R$ ${parseFloat(p.valor_pg).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                    <td>${p.forma_nome}</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                ` : ''}
+            </div>
+        `;
+
+            $('#conteudoOrdem').html(html);
+            $('#modalDetalhesOrdem').modal('show');
+
+            if (hasPermition) {
+                const footerHtml = `
+                <div>
+                    <select id="statusSelect" class="form-control">
+                        <option value="0">Removida</option>
+                        <option value="1">Em Aprovação</option>
+                        <option value="2">Aprovada</option>
+                        <option value="3">Em Montagem</option>
+                        <option value="4">Em Andamento</option>
+                        <option value="5">Finalizada</option>
+                    </select>
+                    <br>
+                    <span>
+                        <button class="btn btn-primary" onclick="alterarStatusOrdem('${order.documento}')">Alterar Status</button>
+                    </span>
+                </div>
+            `;
+                $('#footerStatus').html(footerHtml).show();
+                $('#statusSelect').val(order.status);
+            } else {
+                $('#footerStatus').hide().html('');
+            }
+
+        } catch (err) {
+            Swal.fire('Erro', 'Erro ao carregar detalhes da ordem.', 'error');
+        }
+    }
+
 
 </script>
 </body>

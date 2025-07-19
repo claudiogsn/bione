@@ -248,6 +248,15 @@ if (isset($data['method']) && isset($data['data'])) {
             case 'listMetodosPagamento':
                 $response = OrderServiceController::listMetodosPagamento();
                 break;
+            case 'updateStatusOrderByDocumento':
+                if (!empty($requestData['documento']) && isset($requestData['status'])) {
+                    $response = OrderServiceController::updateStatusOrderByDocumento($requestData['documento'], $requestData['status']);
+                } else {
+                    http_response_code(400);
+                    $response = ['success' => false, 'message' => 'Parâmetros obrigatórios ausentes.'];
+                }
+                break;
+
 
             // Métodos para ClienteController
             case 'createCliente':

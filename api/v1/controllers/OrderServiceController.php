@@ -338,6 +338,25 @@ class OrderServiceController
 
     }
 
+    public static function updateStatusOrderByDocumento($documento, $novo_status)
+    {
+        global $pdo;
+
+        try {
+            $stmt = $pdo->prepare("UPDATE orders SET status = ? WHERE documento = ?");
+            $stmt->execute([$novo_status, $documento]);
+
+            if ($stmt->rowCount() > 0) {
+                return ['success' => true, 'message' => 'Status atualizado com sucesso'];
+            } else {
+                return ['success' => false, 'message' => 'Nenhuma ordem encontrada com esse documento ou status já está igual'];
+            }
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Erro ao atualizar status: ' . $e->getMessage()];
+        }
+    }
+
+
 }
 
 

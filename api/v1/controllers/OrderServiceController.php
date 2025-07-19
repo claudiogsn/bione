@@ -288,35 +288,40 @@ class OrderServiceController
     {
         global $pdo;
 
-        $where = [];
-        $params = [];
-
-        if (!empty($filters['data_inicio']) && !empty($filters['data_fim'])) {
-            $inicio = strtotime($filters['data_inicio']);
-            $fim = strtotime($filters['data_fim']);
-
-            if ($inicio > $fim) {
-                return ['success' => false, 'message' => 'A data inicial não pode ser maior que a data final'];
-            }
-
-            $where[] = "data_montagem BETWEEN :data_inicio AND :data_fim";
-            $params[':data_inicio'] = $filters['data_inicio'];
-            $params[':data_fim'] = $filters['data_fim'];
-        } elseif (!empty($filters['data_inicio'])) {
-            $where[] = "data_montagem >= :data_inicio";
-            $params[':data_inicio'] = $filters['data_inicio'];
-        } elseif (!empty($filters['data_fim'])) {
-            $where[] = "data_montagem <= :data_fim";
-            $params[':data_fim'] = $filters['data_fim'];
+        if (empty($filters['data_inicio']) || empty($filters['data_fim'])) {
+            return ['success' => false, 'message' => 'Data inicial e final são obrigatórias.'];
         }
 
-        $whereClause = $where ? "WHERE " . implode(" AND ", $where) : "";
+        $inicio = strtotime($filters['data_inicio']);
+        $fim = strtotime($filters['data_fim']);
 
-        $stmt = $pdo->prepare("SELECT * FROM orders $whereClause ORDER BY data_montagem DESC");
-        $stmt->execute($params);
+        if ($inicio > $fim) {
+            return ['success' => false, 'message' => 'A data inicial não pode ser maior que a data final'];
+        }
+
+        $stmt = $pdo->prepare("
+        SELECT 
+            o.*, 
+            c.nome AS nome_cliente, 
+            e.nome AS nome_evento, 
+            e.data_inicio AS data_evento_inicio,
+            e.data_fim AS data_evento_fim,
+            e.local AS local_evento
+        FROM orders o
+        LEFT JOIN cliente c ON o.cliente_id = c.id
+        LEFT JOIN evento e ON o.evento_id = e.id
+        WHERE o.data_montagem BETWEEN :data_inicio AND :data_fim
+        ORDER BY o.data_montagem DESC
+    ");
+
+        $stmt->execute([
+            ':data_inicio' => $filters['data_inicio'],
+            ':data_fim' => $filters['data_fim']
+        ]);
 
         return ['success' => true, 'orders' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
+
 
     public static function listMetodosPagamento()
     {

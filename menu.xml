@@ -1,35 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <menu>
-  <menuitem label="Resgatar Voucher">
-    <action>ResgateVoucher</action>
-    <icon>fas:check-double fa-fw</icon>
-  </menuitem>
-  <menuitem label="Gerencia">
-    <icon>fas:users-cog fa-fw</icon>
+  <menuitem label="Estoque">
+    <icon>fas:boxes fa-fw</icon>
     <menu>
-      <menuitem label="Eventos">
-        <action>EventoList</action>
-        <icon>fas:bullhorn fa-fw</icon>
-      </menuitem>
-      <menuitem label="Clientes">
-        <action>ClienteList</action>
-        <icon>fas:users fa-fw</icon>
-      </menuitem>
-      <menuitem label="Ordem de Serviço">
-        <action>VoucherList</action>
-        <icon>fas:address-card fa-fw</icon>
-      </menuitem>
-      <menuitem label="Opções de Recebimento">
-        <action>OpcoesRecebimentoList</action>
-        <icon>fas:receipt fa-fw</icon>
-      </menuitem>
-      <menuitem label="Categoria de Material">
-        <action>CategoriaList</action>
-        <icon>fas:list fa-fw</icon>
-      </menuitem>
-      <menuitem label="Material">
+      <menuitem label="Materiais">
         <action>MaterialList</action>
         <icon>fas:box-open fa-fw</icon>
+      </menuitem>
+      <menuitem label="Patrimônios">
+        <action>PatrimonioList</action>
+        <icon>fas:warehouse fa-fw</icon>
       </menuitem>
       <menuitem label="Fabricantes">
         <action>FabricanteList</action>
@@ -41,12 +21,53 @@
       </menuitem>
     </menu>
   </menuitem>
+
+  <menuitem label="Eventos">
+    <icon>fas:calendar-alt fa-fw</icon>
+    <menu>
+      <menuitem label="Eventos">
+        <action>EventoList</action>
+        <icon>fas:bullhorn fa-fw</icon>
+      </menuitem>
+      <menuitem label="Ordem de Serviço">
+        <action>VoucherList</action>
+        <icon>fas:address-card fa-fw</icon>
+      </menuitem>
+    </menu>
+  </menuitem>
+
+  <menuitem label="Gerência">
+    <icon>fas:users-cog fa-fw</icon>
+    <menu>
+      <menuitem label="Clientes">
+        <action>ClienteList</action>
+        <icon>fas:users fa-fw</icon>
+      </menuitem>
+    </menu>
+  </menuitem>
+
   <menuitem label="Financeiro">
     <icon>far:money-bill-alt fa-fw</icon>
     <menu>
-      <menuitem label="Fornecedores">
-        <action>FinanceiroFornecedorList</action>
-        <icon>fas:luggage-cart fa-fw</icon>
+      <menuitem label="Faturas">
+        <action>FinanceiroFaturaList</action>
+        <icon>fas:file-invoice-dollar fa-fw</icon>
+      </menuitem>
+      <menuitem label="Pagamentos">
+        <action>FinanceiroPagamentoList</action>
+        <icon>fas:money-check-alt fa-fw</icon>
+      </menuitem>
+      <menuitem label="Recebimentos">
+        <action>FinanceiroRecebimentoList</action>
+        <icon>fas:hand-holding-usd fa-fw</icon>
+      </menuitem>
+      <menuitem label="Opções de Recebimento">
+        <action>OpcoesRecebimentoList</action>
+        <icon>fas:receipt fa-fw</icon>
+      </menuitem>
+      <menuitem label="Formas de Pagamento">
+        <action>FinanceiroFormaPagamentoList</action>
+        <icon>fas:credit-card fa-fw</icon>
       </menuitem>
     </menu>
   </menuitem>

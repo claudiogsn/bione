@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Listagem de Ordens de Serviço</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="bsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bsb/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <link href="bsb/css/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        @media (max-width: 768px) {
+            body, .form-control, .modal-content, table, th, td, button {
+                font-size: 12px !important;
+            }
+        }
+    </style>
+</head>
+<body class="theme-blue">
+<div class="container-fluid">
+    <br />
+    <div class="card">
+        <div class="header">
+            <h2>Ordens de Serviço</h2>
+        </div>
+        <div class="body">
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="col-md-4">
+                    <label for="filtroOS">Filtro</label>
+                    <input type="text" id="filtroOS" class="form-control" placeholder="Filtrar por cliente ou evento">
+                </div>
+                <div class="col-md-2">
+                    <label for="dataInicio">Data Início</label>
+                    <input type="date" id="dataInicio" class="form-control">
+                </div>
+                <div class="col-md-2">
+                    <label for="dataFim">Data Fim</label>
+                    <input type="date" id="dataFim" class="form-control">
+                </div>
+                <div class="col-md-4 text-right d-flex align-items-end justify-content-end">
+                    <button class="btn btn-success" id="btnListModelo" style="margin-top: 24px;">Nova Ordem</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="tabela-os">
+                    <thead>
+                    <tr>
+                        <th style="width: 28px; padding: 0;" class="text-center"></th>
+                        <th style="width: 28px; padding: 0;" class="text-center"></th>
+                        <th style="width: 28px; padding: 0;" class="text-center"></th>
+                        <th>Documento</th>
+                        <th>Evento</th>
+                        <th>Cliente</th>
+                        <th>Data Montagem</th>
+                        <th>Início Evento</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+
+
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const baseUrl = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/api/v1/index.php'
+        : 'http://localhost/bione/api/v1/index.php';
+
+    const baseUrlRedirect = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/external'
+        : 'http://localhost/bione/external';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const user = urlParams.get('user');
+    let hasPermition = null;
+
+
+    $(document).ready(() => {
+        verificarPermissao();
+        const hoje = new Date();
+        const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+        const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+
+        $('#dataInicio').val(primeiroDia.toISOString().split('T')[0]);
+        $('#dataFim').val(ultimoDia.toISOString().split('T')[0]);
+
+        $('#dataInicio, #dataFim').on('change', carregarOrdens);
+
+        $('#filtroOS').on('input', function () {
+            const termo = $(this).val().toLowerCase();
+            $('#tabela-os tbody tr').each(function () {
+                $(this).toggle($(this).text().toLowerCase().includes(termo));
+            });
+        });
+
+        $('#btnListModelo').click(() => {
+            window.location.href = `${baseUrlRedirect}/createOrder.html?user=${user}&token=${token}`;
+        });
+
+        carregarOrdens();
+    });
+
+    async function carregarOrdens() {
+        const data_inicio = $('#dataInicio').val();
+        const data_fim = $('#dataFim').val();
+
+        if (!data_inicio || !data_fim) return;
+
+        try {
+            const res = await axios.post(baseUrl, {
+                method: "listOrdersByPeriodo",
+                token,
+                data: { data_inicio, data_fim }
+            });
+
+            if (!res.data.success) throw new Error('Falha na resposta');
+
+            const tbody = $('#tabela-os tbody');
+            tbody.empty();
+
+            res.data.orders.forEach(ordem => {
+                const statusHtml = ordem.status === "1"
+                    ? '<span class="label label-success">Ativa</span>'
+                    : '<span class="label label-danger">Inativa</span>';
+
+                const colEditar = hasPermition
+                    ? `<a href="#" onclick="editarOrdem('${ordem.documento}')" title="Editar">
+                        <i class="fas fa-edit green"></i>
+                   </a>`
+                    : '';
+
+                const colDetalhada = hasPermition
+                    ? `<a href="#" onclick="exportarOrdemDetalhada('${ordem.documento}')" title="Exportar Detalhada">
+                        <i class="fas fa-file-alt blue"></i>
+                   </a>`
+                    : '';
+
+                const row = `
+            <tr>
+                <td class="text-center">${colEditar}</td>
+                <td class="text-center"><a href="#" onclick="exportarOrdem('${ordem.documento}')" title="Exportar OS"><i class="fas fa-file-pdf red"></i></a></td>
+                <td class="text-center">${colDetalhada}</td>
+                <td>${ordem.documento}</td>
+                <td>${ordem.nome_evento}</td>
+                <td>${ordem.nome_cliente}</td>
+                <td>${formatarData(ordem.data_montagem)}</td>
+                <td>${formatarData(ordem.data_evento_inicio)}</td>
+                <td>${statusHtml}</td>
+            </tr>`;
+                tbody.append(row);
+            });
+        } catch (err) {
+            Swal.fire('Erro', 'Não foi possível carregar as ordens.', 'error');
+        }
+    }
+
+    function editarOrdem(documento) {
+        window.location.href = `${baseUrlRedirect}/createOrder.html?user=${user}&token=${token}&controle=${documento}`;
+    }
+
+    function exportarOrdem(documento) {
+        window.open(`${baseUrlRedirect}/printOs.html?documento=${documento}`, '_blank');
+    }
+
+    function exportarOrdemDetalhada(documento) {
+        window.open(`${baseUrlRedirect}/printOsDetalhada.html?documento=${documento}`, '_blank');
+    }
+
+    function formatarData(dataStr) {
+        if (!dataStr) return '-';
+        const d = new Date(dataStr);
+        return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    async function verificarPermissao() {
+        try {
+            const res = await axios.post(baseUrl, {
+                method: 'getUserRoles',
+                token,
+                data: { user }
+            });
+
+            if (res.data.success && Array.isArray(res.data.roles)) {
+                const permissoesAceitas = ['Master', 'Gerente', 'Diretoria'];
+                hasPermition = res.data.roles.some(role => permissoesAceitas.includes(role.name));
+            } else {
+                hasPermition = null;
+            }
+
+            if (!hasPermition) {
+                $('#btnListModelo').hide();
+                $('.col-acoes, .col-exportar').hide();
+            }
+
+            console.log('Permissões do usuário:', hasPermition);
+        } catch (err) {
+            console.error('🚨 Erro ao verificar permissões:', err);
+            hasPermition = null;
+        }
+    }
+
+</script>
+</body>
+</html>

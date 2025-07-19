@@ -2,25 +2,31 @@ const baseUrl = window.location.hostname !== 'localhost'
     ? 'https://bionetecnologia.com.br/crm/api/v1/index.php'
     : 'http://localhost/bione/api/v1/index.php';
 
-const urlParams = new URLSearchParams(window.location.search);
-const requestToken = urlParams.get('token');
-const controleParam = urlParams.get('controle');
+const baseUrlRedirect = window.location.hostname !== 'localhost'
+    ? 'https://bionetecnologia.com.br/crm/external'
+    : 'http://localhost/bione/external';
 
-if (!requestToken) {
+const urlParams = new URLSearchParams(window.location.search);
+const token = urlParams.get('token');
+const documento = urlParams.get('documento');
+const user = urlParams.get('user');
+
+if (!token) {
     Swal.fire('Erro', 'Token de autenticação ausente na URL.', 'error');
     throw new Error('Token ausente');
 }
 
 // Carregar dados se controle vier na URL
-if (controleParam) {
+if (documento) {
     axios.post(`${baseUrl}`, {
-        method: 'getOrderDetailsByControle',
-        token: requestToken,
-        data: { num_controle: controleParam }
+        method: 'getOrderDetailsByDocumento',
+        token: token,
+        data: { documento: documento }
     }).then(response => {
-        if (response.data && response.data.success) {
-            preencherDadosDaOrdem(response.data.data);
-        } else {
+        if (response.data && response.data.success && response.data.details) {
+            preencherDadosDaOrdem(response.data.details);
+        }
+        else {
             Swal.fire('Erro', response.data.message || 'Erro ao carregar ordem.', 'error');
         }
     }).catch(err => {
@@ -116,12 +122,12 @@ function salvarOrdemServico() {
 
     axios.post(`${baseUrl}`, {
         method: 'createOrUpdateOrder',
-        token: requestToken,
+        token: token,
         data: payload
     }).then(response => {
         if (response.data && response.data.success) {
             Swal.fire('Sucesso', 'Ordem salva com sucesso!', 'success').then(() => {
-                window.location.href = 'ordens.html?token=' + requestToken;
+                window.location.href = 'ordens.html?token=' + token;
             });
         } else {
             Swal.fire('Erro', response.data.message || 'Erro ao salvar ordem.', 'error');
@@ -131,8 +137,6 @@ function salvarOrdemServico() {
         Swal.fire('Erro', 'Falha ao enviar dados da ordem.', 'error');
     });
 }
-
-
 
 // Função auxiliar para preencher os dados da ordem
 function preencherDadosDaOrdem(dados) {
@@ -167,7 +171,7 @@ function abrirModalClientes() {
 
     axios.post(`${baseUrl}`, {
         method: 'listClients',
-        token: requestToken,
+        token: token,
         data: {}
     }).then(res => {
         if (Array.isArray(res.data.clients)) {
@@ -196,7 +200,7 @@ function abrirModalEventos() {
 
     axios.post(`${baseUrl}`, {
         method: 'listEvents',
-        token: requestToken,
+        token: token,
         data: {}
     }).then(res => {
         if (Array.isArray(res.data.events)) {
@@ -228,7 +232,7 @@ function abrirModalItem() {
 
     axios.post(`${baseUrl}`, {
         method: 'listMaterials',
-        token: requestToken,
+        token: token,
         data: {}
     }).then(res => {
         if (Array.isArray(res.data.materials)) {
@@ -251,7 +255,7 @@ function abrirModalItem() {
                 // Chama API para buscar os modelos agrupados por material
                 axios.post(`${baseUrl}`, {
                     method: 'listPatrimoniosAgrupado',
-                    token: requestToken,
+                    token: token,
                     data: { material_id: mat.id }
                 }).then(resp => {
                     const agrupado = resp.data.agrupado || [];
@@ -297,7 +301,7 @@ function abrirModalServico() {
 
     axios.post(`${baseUrl}`, {
         method: 'listServicos',
-        token: requestToken,
+        token: token,
         data: {}
     }).then(res => {
         if (Array.isArray(res.data.servicos)) {
@@ -373,7 +377,7 @@ function abrirModalPagamento() {
 
     axios.post(baseUrl, {
         method: 'listMetodosPagamento',
-        token: requestToken,
+        token: token,
         data: {}
     }).then(res => {
         if (Array.isArray(res.data.metodos)) {
@@ -499,11 +503,6 @@ function animateTotalValor(finalValue) {
     }, 1000 / frameRate);
 }
 
-
-
-
-
-
 // Atualização de total
 function atualizarTotal() {
     let totalItens = 0;
@@ -567,4 +566,8 @@ function preencherLinhaServico(row, servico) {
 function preencherLinhaPagamento(row, pagamento) {
     row.append(`<td><input type="text" class="form-control forma_pagamento" value="${pagamento.forma_pagamento}"></td>`);
     row.append(`<td><input type="text" class="form-control valor_pago" value="${pagamento.valor_pago}"></td>`);
+}
+
+function retornarLista() {
+    window.location.href = `${baseUrlRedirect}/listOrdem.html?user=${user}&token=${token}`;
 }

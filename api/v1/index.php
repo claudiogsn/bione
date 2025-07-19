@@ -5,6 +5,7 @@ require_once 'controllers/OrderServiceController.php';
 require_once 'controllers/ClienteController.php';
 require_once 'controllers/EventController.php';
 require_once 'controllers/MaterialController.php';
+require_once 'controllers/UserController.php';
 
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
@@ -31,6 +32,14 @@ if (isset($data['method']) && isset($data['data'])) {
 
     try {
         switch ($method) {
+            case 'getUserRoles':
+                if (isset($requestData['user'])) {
+                    $response = UserController::getUserRoles($requestData['user']);
+                } else {
+                    http_response_code(400);
+                    $response = array('error' => 'Parâmetro user_id ausente');
+                }
+                break;
             // Métodos para MaterialController
             case 'createMaterial':
                 $response = MaterialController::createMaterial($requestData);

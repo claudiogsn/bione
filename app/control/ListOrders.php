@@ -11,9 +11,9 @@ class ListOrders extends TPage
 
 
         if($_SERVER['SERVER_NAME'] == "localhost"){
-            $link = "http://".$_SERVER['SERVER_NAME']."/bione/external/listOrdem.html?user={$username}&token={$token}";
+            $link = "http://localhost/bione/external/listOrdem.html?user={$username}&token={$token}";
         }else{
-            $link = "https://".$_SERVER['SERVER_NAME']."/external/listOrdem.html?user={$username}&token={$token}";
+            $link = "https://bionetecnologia.com.br/crm/external/listOrdem.html?user={$username}&token={$token}";
         }
 
         $iframe = new TElement('iframe');

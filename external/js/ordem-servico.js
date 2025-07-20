@@ -103,7 +103,7 @@ function salvarOrdemServico() {
 
     const payload = {
         order: {
-            ...(controleParam && { id: controleParam }),
+            ...(documento && { documento: documento }),
             evento_id,
             cliente_id,
             data_montagem,
@@ -127,7 +127,7 @@ function salvarOrdemServico() {
     }).then(response => {
         if (response.data && response.data.success) {
             Swal.fire('Sucesso', 'Ordem salva com sucesso!', 'success').then(() => {
-                window.location.href = 'ordens.html?token=' + token;
+                window.location.href = `${baseUrlRedirect}/listOrdem.html?user=${user}&token=${token}`;
             });
         } else {
             Swal.fire('Erro', response.data.message || 'Erro ao salvar ordem.', 'error');

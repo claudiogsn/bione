@@ -339,6 +339,7 @@ class OrderServiceController
     }
 
     public static function updateStatusOrderByDocumento($documento, $novo_status)
+
     {
         global $pdo;
 

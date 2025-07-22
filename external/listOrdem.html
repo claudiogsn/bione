@@ -455,6 +455,39 @@
         }
     }
 
+    async function gerarFatura(documento) {
+        try {
+            Swal.fire({ title: 'Gerando fatura...', didOpen: () => Swal.showLoading() });
+
+            // 1. Chamar o método para gerar a fatura
+            const resFatura = await axios.post(baseUrl, {
+                method: 'generateFaturaByOrder',
+                token,
+                data: { documento }
+            });
+
+            if (!resFatura.data.success) throw new Error(resFatura.data.message);
+
+            // 2. Gerar o PDF da fatura
+            const resPdf = await axios.post(baseUrl, {
+                method: 'generateFaturaPdf',
+                token,
+                data: { documento_os: documento }
+            });
+
+            if (!resPdf.data.success) throw new Error('Fatura criada, mas falha ao gerar PDF.');
+
+            Swal.close();
+            visualizarPdfEmModal(resPdf.data.url);
+            carregarOrdens();
+
+        } catch (err) {
+            Swal.fire('Erro', err.message || 'Erro ao gerar fatura', 'error');
+        }
+    }
+
+
+
     function visualizarPdfEmModal(url) {
         $('#iframePdfFatura').attr('src', url);
         $('#modalPdfFatura').modal('show');

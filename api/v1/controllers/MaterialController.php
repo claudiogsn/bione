@@ -596,7 +596,7 @@ class MaterialController
 
         $sql = "SELECT COUNT(*) FROM material_patrimonio WHERE patrimonio = :patrimonio";
         $params = [':patrimonio' => $patrimonio];
-        
+
         $stmt = $pdo->prepare($sql);
         $stmt->execute($params);
         $count = $stmt->fetchColumn();

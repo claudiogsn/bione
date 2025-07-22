@@ -11,9 +11,9 @@ class MaterialList extends TPage
 
 
         if ($_SERVER['SERVER_NAME'] == "localhost") {
-            $link = "http://localhost/bione/external/listMateriais.php?username={$username}&token={$token}";
+            $link = "http://localhost/bione/external/listMateriais.html?username={$username}&token={$token}";
         } else {
-            $link = "https://bionetecnologia.com.br/crm/external/listMateriais.php?username={$username}&token={$token}";
+            $link = "https://bionetecnologia.com.br/crm/external/listMateriais.html?username={$username}&token={$token}";
         }
 
         $iframe = new TElement('iframe');

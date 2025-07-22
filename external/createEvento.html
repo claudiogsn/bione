@@ -156,37 +156,32 @@
     $(document).ready(function () {
         $('.cep').mask('00000-000');
 
-        $('#cliente_id').select2({
-            placeholder: 'Selecione um cliente',
-            allowClear: true,
-            width: 'resolve',
-            ajax: {
-                url: `${baseUrl}/api/v1/index.php`,
-                type: 'POST',
-                contentType: 'application/json',
-                dataType: 'json',
-                delay: 250,
-                data: function () {
-                    return JSON.stringify({
-                        token: requestToken,
-                        method: 'listClients',
-                        data: {}
-                    });
-                },
-                processResults: function (data) {
-                    if (data.success && Array.isArray(data.clients)) {
-                        return {
-                            results: data.clients.map(cli => ({
-                                id: cli.id,
-                                text: `${cli.nome} - ${cli.cpf_cnpj}`
-                            }))
-                        };
-                    } else {
-                        return { results: [] };
-                    }
-                }
+        // Carregar clientes uma vez com axios
+        axios.post(`${baseUrl}/api/v1/index.php`, {
+            token: requestToken,
+            method: 'listClients',
+            data: {}
+        }).then(res => {
+            if (res.data.success && Array.isArray(res.data.clients)) {
+                const options = res.data.clients.map(cli => ({
+                    id: cli.id,
+                    text: `${cli.nome} - ${cli.cpf_cnpj}`
+                }));
+
+                // Inicializa select2 com os dados carregados
+                $('#cliente_id').select2({
+                    data: options,
+                    placeholder: 'Selecione um cliente',
+                    allowClear: true,
+                    width: 'resolve'
+                });
+            } else {
+                Swal.fire('Erro', 'Não foi possível carregar os clientes.', 'error');
             }
+        }).catch(() => {
+            Swal.fire('Erro', 'Erro na requisição de clientes.', 'error');
         });
+
 
 
         $('#cep').on('blur', function () {

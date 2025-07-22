@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cadastro de Cliente</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="bsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bsb/css/style.css" rel="stylesheet">
+    <link href="bsb/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body class="theme-blue">
+<div class="container-fluid mt-5">
+    <div class="row clearfix">
+        <div class="col-xs-12">
+            <br>
+            <div class="card">
+                <div class="header">
+                    <h2>Cadastro de Cliente</h2>
+                </div>
+                <div class="body">
+                    <form id="clienteForm">
+                        <div class="row">
+                            <div class="col-sm-8">
+                                <label for="nome">Nome</label>
+                                <input type="text" class="form-control" id="nome" name="nome" required>
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="tipo">Tipo</label>
+                                <select id="tipo" name="tipo" class="form-control" required>
+                                    <option value="FISICA">Pessoa Física</option>
+                                    <option value="JURIDICA">Pessoa Jurídica</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <label for="cpf_cnpj">CPF/CNPJ</label>
+                                <input type="text" class="form-control" id="cpf_cnpj" name="cpf_cnpj" required>
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="telefone">Telefone</label>
+                                <input type="text" class="form-control" id="telefone" name="telefone">
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="email">E-mail</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-4">
+                                <label for="cep">CEP</label>
+                                <input type="text" class="form-control cep" id="cep" name="cep">
+                            </div>
+                            <div class="col-sm-8">
+                                <label for="endereco">Endereço</label>
+                                <input type="text" class="form-control" id="endereco" name="endereco">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-sm-2">
+                                <label for="numero">Número</label>
+                                <input type="text" class="form-control" id="numero" name="numero">
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="bairro">Bairro</label>
+                                <input type="text" class="form-control" id="bairro" name="bairro">
+                            </div>
+                            <div class="col-sm-4">
+                                <label for="cidade">Cidade</label>
+                                <input type="text" class="form-control" id="cidade" name="cidade">
+                            </div>
+                            <div class="col-sm-2">
+                                <label for="estado">Estado</label>
+                                <input type="text" class="form-control" id="estado" name="estado">
+                            </div>
+                        </div>
+
+                        <center><button class="btn btn-success" type="button" id="btnSalvarCliente">Salvar</button></center>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+
+<script>
+    const baseUrl = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm'
+        : 'http://localhost/bione';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.getElementById('clienteForm');
+
+        const nomeInput = document.getElementById('nome');
+        const tipoSelect = document.getElementById('tipo');
+        const cpfCnpjInput = document.getElementById('cpf_cnpj');
+        const telefoneInput = document.getElementById('telefone');
+        const emailInput = document.getElementById('email');
+        const cepInput = document.getElementById('cep');
+        const enderecoInput = document.getElementById('endereco');
+        const numeroInput = document.getElementById('numero');
+        const bairroInput = document.getElementById('bairro');
+        const cidadeInput = document.getElementById('cidade');
+        const estadoInput = document.getElementById('estado');
+
+        // Máscaras
+        function applyCpfMask(value) {
+            return value.replace(/\D/g, '')
+                .replace(/(\d{3})(\d)/, "$1.$2")
+                .replace(/(\d{3})(\d)/, "$1.$2")
+                .replace(/(\d{3})(\d{1,2})$/, "$1-$2");
+        }
+
+        function applyCnpjMask(value) {
+            return value.replace(/\D/g, '')
+                .replace(/^(\d{2})(\d)/, "$1.$2")
+                .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
+                .replace(/\.(\d{3})(\d)/, ".$1/$2")
+                .replace(/(\d{4})(\d{1,2})$/, "$1-$2");
+        }
+
+        function applyPhoneMask(value) {
+            value = value.replace(/\D/g, '');
+            return value.length > 10 ?
+                value.replace(/^(\d{2})(\d{5})(\d{4})$/, "($1) $2-$3") :
+                value.replace(/^(\d{2})(\d{4})(\d{4})$/, "($1) $2-$3");
+        }
+
+        function applyCepMask(value) {
+            return value.replace(/\D/g, '').replace(/^(\d{5})(\d)/, "$1-$2");
+        }
+
+        // Limpeza
+        function clean(value) {
+            return value.replace(/\D/g, '');
+        }
+
+        // Validação e preenchimento de dados por documento
+        async function validateDocumento(doc) {
+            const method = tipoSelect.value === 'FISICA' ? 'validateCPF' : 'validateCNPJ';
+            const res = await axios.post(`${baseUrl}/api/v1/index.php`, {
+                token,
+                method,
+                data: { [method === 'validateCPF' ? 'cpf' : 'cnpj']: doc }
+            });
+
+            if (res.data.success && res.data.data) {
+                const { nome, email, telefone } = res.data.data;
+                if (nome) nomeInput.value = nome;
+                if (email) emailInput.value = email;
+                if (telefone) telefoneInput.value = telefone;
+            } else {
+                Swal.fire('Atenção', res.data.message || 'Documento inválido.', 'warning');
+            }
+        }
+
+        // Validação e preenchimento de endereço por CEP
+        async function validateCep(cep) {
+            try {
+                const res = await axios.get(`https://viacep.com.br/ws/${cep}/json/`);
+                if (!res.data.erro) {
+                    enderecoInput.value = res.data.logradouro;
+                    bairroInput.value = res.data.bairro;
+                    cidadeInput.value = res.data.localidade;
+                    estadoInput.value = res.data.uf;
+                } else {
+                    Swal.fire('Atenção', 'CEP não encontrado.', 'warning');
+                }
+            } catch (e) {
+                Swal.fire('Erro', 'Falha ao buscar o CEP.', 'error');
+            }
+        }
+
+        // Evento: troca de tipo
+        tipoSelect.addEventListener('change', () => {
+            cpfCnpjInput.value = '';
+        });
+
+        // Evento: input no documento
+        cpfCnpjInput.addEventListener('input', () => {
+            const tipo = tipoSelect.value;
+            cpfCnpjInput.value = tipo === 'FISICA'
+                ? applyCpfMask(cpfCnpjInput.value)
+                : applyCnpjMask(cpfCnpjInput.value);
+        });
+
+        cpfCnpjInput.addEventListener('blur', () => {
+            const doc = clean(cpfCnpjInput.value);
+            if (doc.length > 10) validateDocumento(doc);
+        });
+
+        telefoneInput.addEventListener('input', () => {
+            telefoneInput.value = applyPhoneMask(telefoneInput.value);
+        });
+
+        cepInput.addEventListener('input', () => {
+            cepInput.value = applyCepMask(cepInput.value);
+        });
+
+        cepInput.addEventListener('blur', () => {
+            const cep = clean(cepInput.value);
+            if (cep.length === 8) validateCep(cep);
+        });
+
+        // Submissão do formulário
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const doc = clean(cpfCnpjInput.value);
+            const telefone = clean(telefoneInput.value);
+            const cep = clean(cepInput.value);
+
+            const body = {
+                token,
+                method: 'createCliente',
+                data: {
+                    nome: nomeInput.value,
+                    telefone,
+                    email: emailInput.value,
+                    cpf_cnpj: doc,
+                    status: 'ativo',
+                    endereco: `${enderecoInput.value}, ${numeroInput.value}`,
+                    bairro: bairroInput.value,
+                    cidade: cidadeInput.value,
+                    estado: estadoInput.value,
+                    cep
+                }
+            };
+
+            try {
+                const res = await axios.post(`${baseUrl}/api/v1/index.php`, body);
+                if (res.data.success) {
+                    Swal.fire('Sucesso', 'Cliente cadastrado com sucesso!', 'success');
+                    form.reset();
+                } else {
+                    Swal.fire('Erro', res.data.message || 'Erro ao salvar.', 'error');
+                }
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao comunicar com o servidor.', 'error');
+            }
+        });
+
+        document.getElementById('btnSalvarCliente').addEventListener('click', async () => {
+            const nome = nomeInput.value.trim();
+            const doc = cleanCpfCnpj(cpfCnpjInput.value);
+            const telefone = cleanTelefone(telefoneInput.value);
+            const email = emailInput.value.trim();
+            const cep = cleanCep(cepInput.value);
+            const endereco = enderecoInput.value.trim();
+            const numero = numeroInput.value.trim();
+            const bairro = bairroInput.value.trim();
+            const cidade = cidadeInput.value.trim();
+            const estado = estadoInput.value.trim();
+
+            // 🔍 Validação de campos obrigatórios
+            if (!nome || !doc || !telefone || !email || !cep || !endereco || !numero || !bairro || !cidade || !estado) {
+                Swal.fire('Atenção', 'Preencha todos os campos obrigatórios.', 'warning');
+                return;
+            }
+
+            const body = {
+                token: requestToken,
+                method: 'createCliente',
+                data: {
+                    nome,
+                    telefone,
+                    email,
+                    cpf_cnpj: doc,
+                    status: 'ativo',
+                    endereco: `${endereco}, ${numero}`,
+                    bairro,
+                    cidade,
+                    estado,
+                    cep
+                }
+            };
+
+            try {
+                const res = await axios.post(`${baseUrl}/api/v1/index.php`, body);
+                if (res.data.success) {
+                    Swal.fire('Sucesso', 'Cliente cadastrado com sucesso!', 'success');
+                    form.reset();
+                } else {
+                    Swal.fire('Erro', res.data.message || 'Erro ao salvar.', 'error');
+                }
+            } catch (err) {
+                Swal.fire('Erro', 'Erro ao comunicar com o servidor.', 'error');
+            }
+        });
+
+
+    });
+</script>
+
+</html>

@@ -13,6 +13,7 @@
     <script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
     <style>
         @media (max-width: 768px) {
             body, .form-control, .modal-content, table, th, td, button {
@@ -93,7 +94,7 @@
     </div>
 </div>
 <div class="modal fade" id="modalPdfFatura" tabindex="-1" role="dialog" aria-labelledby="pdfLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document" style="max-width: 95%;">
+    <div class="modal-dialog modal-lg" role="document" style="max-width: 95%;">
         <div class="modal-content">
             <div class="modal-header">
                 <h4 class="modal-title">Fatura Gerada</h4>
@@ -223,7 +224,7 @@
                     } else {
                         colFatura = `
                         <a href="#" onclick="event.stopPropagation(); gerarFatura('${ordem.documento}')" title="Gerar Fatura">
-                            <i class="fas fa-file-invoice green"></i>
+                            <i class="fa-solid fa-hand-holding-dollar green"></i>
                         </a>`;
                     }
                 }
@@ -235,7 +236,7 @@
                 // Editar
                 const colEditar = hasPermition
                     ? `<a href="#" onclick="event.stopPropagation(); editarOrdem('${ordem.documento}')" title="Editar">
-                        <i class="fas fa-edit green"></i>
+                        <i class="fas fa-edit orange"></i>
                    </a>`
                     : '';
 
@@ -458,6 +459,9 @@
         $('#iframePdfFatura').attr('src', url);
         $('#modalPdfFatura').modal('show');
     }
+
+
+
 
 
 </script>

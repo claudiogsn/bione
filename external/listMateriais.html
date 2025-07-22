@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Materiais</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="bsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bsb/css/style.css" rel="stylesheet">
+    <link href="bsb/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+</head>
+<body class="theme-blue">
+<div class="container-fluid">
+    <br>
+    <div class="card">
+        <div class="header">
+            <h2>Lista de Materiais
+                <a href="#" class="btn btn-primary btn-sm" onclick="abrirModalMaterial()">
+                    <i class="fa fa-plus"></i> Novo
+                </a>
+            </h2>
+        </div>
+        <div class="body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="tabelaMateriais">
+                    <thead>
+                    <tr>
+                        <th style="width: 40px; padding: 0;" class="text-center"></th>
+                        <th style="width: 28px; padding: 0;" class="text-center"></th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Unidade</th>
+                        <th>Valor Locação</th>
+                        <th>Qtde Patrimônios</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Material -->
+<div class="modal fade" id="modalMaterial" tabindex="-1">
+    <div class="modal-dialog">
+        <form onsubmit="salvarMaterial(); return false;">
+            <div class="modal-content">
+                <div class="modal-header"><h4 class="modal-title">Material</h4></div>
+                <div class="modal-body">
+                    <input type="hidden" id="materialId">
+                    <label>Nome</label>
+                    <input type="text" id="nome" class="form-control" required>
+
+                    <label>Categoria</label>
+                    <select id="categoria" class="form-control"></select>
+
+                    <label>Unidade</label>
+                    <select id="unidade" class="form-control">
+                        <option value="UND">UND</option>
+                        <option value="M">METROS</option>
+
+                    </select>
+
+                    <label>Valor Locação</label>
+                    <input type="number" id="valor_locacao" class="form-control" step="0.01">
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Fechar</button>
+                    <button class="btn btn-success" type="submit">Salvar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Patrimônios -->
+<div class="modal fade" id="modalPatrimonios" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header"><h4 class="modal-title">Patrimônios</h4></div>
+            <div class="modal-body table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead>
+                    <tr>
+                        <th>Modelo</th>
+                        <th>Fabricante</th>
+                        <th>Nº Série</th>
+                        <th>Patrimônio</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody id="listaPatrimonios"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    const baseUrl = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/api/v1/index.php'
+        : 'http://localhost/bione/api/v1/index.php';
+
+    $(document).ready(() => {
+        carregarCategorias();
+        carregarMateriais();
+    });
+
+    function carregarCategorias() {
+        axios.post(baseUrl, {
+            method: 'listCategorias',
+            token,
+            data: {}
+        }).then(res => {
+            const categorias = res.data.categorias || [];
+            $('#categoria').html(categorias.map(c => `<option value="${c.id}">${c.nome}</option>`));
+        });
+    }
+
+    function carregarMateriais() {
+        axios.post(baseUrl, {
+            method: 'listMaterials',
+            token,
+            data: {}
+        }).then(res => {
+            const rows = res.data.materials.map(m => `
+                <tr>
+                    <td class="text-center">
+                        <a href="#" onclick="abrirModalMaterial(${m.id})" title="Editar"><i class="fas fa-edit green"></i></a>
+                    </td>
+                    <td class="text-center"><a href="#" onclick="verPatrimonios(${m.id})" title="Ver Patrimônios"><i class="fas fa-boxes orange"></i></a></td>
+                    <td>${m.nome}</td>
+                    <td>${m.categoria_nome || '-'}</td>
+                    <td>${m.unidade}</td>
+                    <td>R$ ${parseFloat(m.valor_locacao || 0).toFixed(2)}</td>
+                    <td>${m.total_patrimonios}</td>
+                </tr>
+            `);
+            $('#tabelaMateriais tbody').html(rows.join(''));
+        });
+    }
+
+    function abrirModalMaterial(id = null) {
+        $('#materialId').val('');
+        $('#nome').val('');
+        $('#categoria').val('');
+        $('#unidade').val('UND');
+        $('#valor_locacao').val('');
+
+        if (id) {
+            axios.post(baseUrl, {
+                method: 'getMaterialById',
+                token,
+                data: { id }
+            }).then(res => {
+                const m = res.data.material;
+                $('#materialId').val(m.id);
+                $('#nome').val(m.nome);
+                $('#categoria').val(m.categoria_id);
+                $('#unidade').val(m.unidade);
+                $('#valor_locacao').val(m.valor_locacao);
+                $('#modalMaterial').modal('show');
+            });
+        } else {
+            $('#modalMaterial').modal('show');
+        }
+    }
+
+    function salvarMaterial() {
+        const data = {
+            nome: $('#nome').val(),
+            categoria_id: $('#categoria').val(),
+            unidade: $('#unidade').val(),
+            valor_locacao: $('#valor_locacao').val()
+        };
+        const id = $('#materialId').val();
+        const method = id ? 'updateMaterial' : 'createMaterial';
+        if (id) data.id = id;
+
+        axios.post(baseUrl, {
+            method,
+            token,
+            data
+        }).then(res => {
+            Swal.fire('Sucesso', res.data.message || 'Salvo com sucesso!', 'success');
+            $('#modalMaterial').modal('hide');
+            carregarMateriais();
+        });
+    }
+
+    function verPatrimonios(materialId) {
+        axios.post(baseUrl, {
+            method: 'listPatrimoniosByMaterial',
+            token,
+            data: { material_id: materialId }
+        }).then(res => {
+            const rows = res.data.patrimonios.map(p => `
+                <tr>
+                    <td>${p.modelo}</td>
+                    <td>${p.fabricante_nome || '-'}</td>
+                    <td>${p.numero_serie || '-'}</td>
+                    <td>${p.patrimonio || '-'}</td>
+                    <td>${p.status || '-'}</td>
+                </tr>
+            `);
+            $('#listaPatrimonios').html(rows.join(''));
+            $('#modalPatrimonios').modal('show');
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 <?php
-class MaterialList extends TPage
+class PatrimonioList extends TPage
 {
     private $form;
     public function __construct($param)
@@ -11,9 +11,9 @@ class MaterialList extends TPage
 
 
         if ($_SERVER['SERVER_NAME'] == "localhost") {
-            $link = "http://localhost/bione/external/listMateriais.php?username={$username}&token={$token}";
+            $link = "http://localhost/bione/external/listPatrimonios.php?username={$username}&token={$token}";
         } else {
-            $link = "https://bionetecnologia.com.br/crm/external/listMateriais.php?username={$username}&token={$token}";
+            $link = "https://bionetecnologia.com.br/crm/external/listPatrimonios.php?username={$username}&token={$token}";
         }
 
         $iframe = new TElement('iframe');

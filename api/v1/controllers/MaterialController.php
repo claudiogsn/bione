@@ -101,7 +101,6 @@ class MaterialController
         return ['success' => true, 'agrupado' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
-
     public static function listPatrimoniosByMaterial($materialId)
     {
         global $pdo;
@@ -118,8 +117,6 @@ class MaterialController
 
         return ['success' => true, 'patrimonios' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
-
-
 
     public static function updateMaterial($id, $data)
     {
@@ -237,7 +234,6 @@ class MaterialController
         }
     }
 
-
     public static function listMaterials($filters = [])
     {
         global $pdo;
@@ -336,7 +332,6 @@ class MaterialController
         }
     }
 
-
     public static function updateFabricante($id, $data)
     {
         global $pdo;
@@ -365,8 +360,6 @@ class MaterialController
         }
     }
 
-
-
     public static function getCategoriaById($id)
     {
         global $pdo;
@@ -385,7 +378,6 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao buscar categoria: ' . $e->getMessage()];
         }
     }
-
 
     public static function updateCategoria($id, $data)
     {
@@ -415,7 +407,6 @@ class MaterialController
         }
     }
 
-
     public static function createCategoria($data)
     {
         global $pdo;
@@ -432,7 +423,6 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao criar categoria: ' . $e->getMessage()];
         }
     }
-
 
     public static function listCategorias($tipo = null)
     {
@@ -453,7 +443,6 @@ class MaterialController
 
         return ['success' => true, 'categorias' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
-
     // Cria novo serviço
     public static function createServico($data)
     {
@@ -476,7 +465,6 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao criar serviço: ' . $e->getMessage()];
         }
     }
-
 // Atualiza um serviço existente
     public static function updateServico($id, $data)
     {
@@ -505,7 +493,6 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao atualizar serviço: ' . $e->getMessage()];
         }
     }
-
 // Remove um serviço
     public static function deleteServico($id)
     {
@@ -522,7 +509,6 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao excluir serviço: ' . $e->getMessage()];
         }
     }
-
 // Busca serviço por ID
     public static function getServicoById($id)
     {
@@ -540,7 +526,6 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao buscar serviço: ' . $e->getMessage()];
         }
     }
-
 // Lista serviços (pode aplicar filtros no futuro)
     public static function listServicos($filters = [])
     {
@@ -561,5 +546,67 @@ class MaterialController
 
         return ['success' => true, 'servicos' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
+    public static function listPatrimonios()
+    {
+        global $pdo;
+
+        $sql = "
+        SELECT 
+            mp.id,
+            mp.material_id,
+            m.nome AS nome_material,
+            mp.fabricante_id,
+            f.nome AS nome_fabricante,
+            mp.modelo,
+            mp.numero_serie,
+            mp.patrimonio,
+            mp.status,
+            mp.custo_material,
+            mp.custo_locacao,
+            mp.sublocado,
+            mp.fornecedor_id,
+            mp.created_at,
+            mp.updated_at
+        FROM material_patrimonio mp
+        LEFT JOIN material m ON mp.material_id = m.id
+        LEFT JOIN fabricante f ON mp.fabricante_id = f.id
+        ORDER BY mp.id DESC
+    ";
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $patrimonios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'success' => true,
+                'patrimonios' => $patrimonios
+            ];
+        } catch (PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Erro ao buscar patrimônios: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public static function verificaPatrimonioDisponivel($patrimonio)
+    {
+        global $pdo;
+
+        $sql = "SELECT COUNT(*) FROM material_patrimonio WHERE patrimonio = :patrimonio";
+        $params = [':patrimonio' => $patrimonio];
+        
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $count = $stmt->fetchColumn();
+
+        return [
+            'success' => true,
+            'disponivel' => $count == 0
+        ];
+    }
+
+
 
 }

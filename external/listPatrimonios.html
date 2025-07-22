@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Lista de Patrimônios</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="bsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bsb/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <link href="bsb/css/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+    <style>
+        @media (max-width: 768px) {
+            body, .form-control, .modal-content, table, th, td, button {
+                font-size: 12px !important;
+            }
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+</head>
+<body class="theme-blue">
+<div class="container-fluid">
+    <br>
+    <div class="card">
+        <div class="header">
+            <h2>Lista de Patrimônios
+                <a href="#" class="btn btn-primary btn-sm" onclick="abrirModalPatrimonio()">
+                    <i class="fa fa-plus"></i> Novo
+                </a>
+            </h2>
+        </div>
+        <div class="body">
+            <div class="row" style="margin-top: 10px; padding: 0 15px;">
+                <div class="col-md-4">
+                    <input type="text" id="filtroPatrimonio" class="form-control" placeholder="🔍 Filtrar por material, modelo ou fabricante...">
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="tabelaPatrimonios">
+                    <thead>
+                    <tr>
+                        <th style="width: 40px; padding: 0;" class="text-center"></th>
+                        <th>Material</th>
+                        <th>Fabricante</th>
+                        <th>Modelo</th>
+                        <th>Nº Série</th>
+                        <th>Patrimônio</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Patrimônio -->
+<div class="modal fade" id="modalPatrimonio" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form onsubmit="salvarPatrimonio(); return false;">
+            <div class="modal-content">
+                <div class="modal-header"><h4 class="modal-title">Cadastro de Patrimônio</h4></div>
+                <div class="modal-body">
+                    <input type="hidden" id="patrimonioId">
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label>Material</label>
+                            <select id="material_id" class="form-control select2" required></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label>Fabricante</label>
+                            <select id="fabricante_id" class="form-control select2"></select>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-4">
+                            <label>Modelo</label>
+                            <input type="text" id="modelo" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Nº Série</label>
+                            <input type="text" id="numero_serie" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Nº Patrimônio</label>
+                            <input type="text" id="patrimonio" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-4">
+                            <label>Status</label>
+                            <select id="status" class="form-control">
+                                <option value="ATIVO">Ativo</option>
+                                <option value="INATIVO">Inativo</option>
+                                <option value="DANIFICADO">Danificado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label>Custo Material</label>
+                            <input type="text" id="custo_material" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label>Custo Locação</label>
+                            <input type="text" id="custo_locacao" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="row" style="margin-top: 10px;">
+                        <div class="col-md-4">
+                            <label>Sublocado?</label>
+                            <select id="sublocado" class="form-control">
+                                <option value="NAO">Não</option>
+                                <option value="SIM">Sim</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-default" data-dismiss="modal">Fechar</button>
+                    <button class="btn btn-success" type="submit">Salvar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/cleave.js@1.6.0/dist/cleave.min.js"></script>
+<script>
+    const cleaveMaterial = new Cleave('#custo_material', {
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        prefix: 'R$ ',
+        noImmediatePrefix: false,
+        rawValueTrimPrefix: true
+    });
+
+    const cleaveLocacao = new Cleave('#custo_locacao', {
+        numeral: true,
+        numeralThousandsGroupStyle: 'thousand',
+        prefix: 'R$ ',
+        noImmediatePrefix: false,
+        rawValueTrimPrefix: true
+    });
+</script>
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+
+    const baseUrl = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/api/v1/index.php'
+        : 'http://localhost/bione/api/v1/index.php';
+
+    $(document).ready(() => {
+        $('.select2').select2({
+            width: '100%',
+            dropdownParent: $('#modalPatrimonio')
+        });
+        carregarPatrimonios();
+        carregarMateriais();
+        carregarFabricantes();
+    });
+
+
+
+    function carregarPatrimonios() {
+        axios.post(baseUrl, {
+            method: 'listPatrimonios',
+            token,
+            data: {}
+        }).then(res => {
+            const rows = res.data.patrimonios.map(p => `
+                <tr>
+                    <td class="text-center">
+                        <a href="#" onclick="abrirModalPatrimonio(${p.id})" title="Editar"><i class="fas fa-edit green"></i></a>
+                    </td>
+                    <td>${p.nome_material || '-'}</td>
+                    <td>${p.nome_fabricante || '-'}</td>
+                    <td>${p.modelo || '-'}</td>
+                    <td>${p.numero_serie || '-'}</td>
+                    <td>${p.patrimonio || '-'}</td>
+                    <td>${p.status || '-'}</td>
+                </tr>
+            `);
+            $('#tabelaPatrimonios tbody').html(rows.join(''));
+        });
+
+        $('#filtroPatrimonio').on('input', function () {
+            const termo = $(this).val().toLowerCase();
+            $('#tabelaPatrimonios tbody tr').each(function () {
+                const texto = $(this).text().toLowerCase();
+                $(this).toggle(texto.includes(termo));
+            });
+        });
+
+    }
+
+    function carregarMateriais() {
+        axios.post(baseUrl, {
+            method: 'listMaterials',
+            token,
+            data: {}
+        }).then(res => {
+            const options = res.data.materials.map(m => `<option value="${m.id}">${m.nome}</option>`);
+            $('#material_id').html(options.join('')).trigger('change');
+        });
+    }
+
+    function carregarFabricantes() {
+        axios.post(baseUrl, {
+            method: 'listFabricantes',
+            token,
+            data: {}
+        }).then(res => {
+            const options = res.data.fabricantes.map(f => `<option value="${f.id}">${f.nome}</option>`);
+            $('#fabricante_id').html(options.join('')).trigger('change');
+        });
+    }
+
+    function abrirModalPatrimonio(id = null) {
+        $('#patrimonioId').val('');
+        $('#material_id').val('').trigger('change');
+        $('#fabricante_id').val('').trigger('change');
+        $('#modelo').val('');
+        $('#numero_serie').val('');
+        $('#patrimonio').val('');
+        $('#status').val('ATIVO');
+        $('#custo_material').val('');
+        $('#custo_locacao').val('');
+        $('#sublocado').val('NAO');
+
+        if (id) {
+            axios.post(baseUrl, {
+                method: 'getPatrimonioById',
+                token,
+                data: { id }
+            }).then(res => {
+                const p = res.data.patrimonio;
+                $('#patrimonioId').val(p.id);
+                $('#material_id').val(p.material_id).trigger('change');
+                $('#fabricante_id').val(p.fabricante_id).trigger('change');
+                $('#modelo').val(p.modelo);
+                $('#numero_serie').val(p.numero_serie);
+                $('#patrimonio').val(p.patrimonio);
+                $('#status').val(p.status);
+                $('#custo_material').val(p.custo_material);
+                $('#custo_locacao').val(p.custo_locacao);
+                $('#sublocado').val(p.sublocado);
+                $('#modalPatrimonio').modal('show');
+            });
+        } else {
+            $('#modalPatrimonio').modal('show');
+        }
+    }
+
+    function salvarPatrimonio() {
+        const data = {
+            material_id: $('#material_id').val(),
+            fabricante_id: $('#fabricante_id').val(),
+            modelo: $('#modelo').val(),
+            numero_serie: $('#numero_serie').val(),
+            patrimonio: $('#patrimonio').val(),
+            status: $('#status').val(),
+            custo_material: $('#custo_material').val().replace('R$ ', '').replace('.', '').replace(',', '.'),
+            custo_locacao: $('#custo_locacao').val().replace('R$ ', '').replace('.', '').replace(',', '.'),
+            sublocado: $('#sublocado').val()
+        };
+        const id = $('#patrimonioId').val();
+        const method = id ? 'updatePatrimonio' : 'addPatrimonio';
+        if (id) data.id = id;
+
+        axios.post(baseUrl, {
+            method,
+            token,
+            data
+        }).then(res => {
+            Swal.fire('Sucesso', res.data.message || 'Salvo com sucesso!', 'success');
+            $('#modalPatrimonio').modal('hide');
+            carregarPatrimonios();
+        });
+    }
+
+    $('#patrimonio').on('blur', function () {
+        const patrimonio = $(this).val();
+        const id = $('#patrimonioId').val();
+
+        if (!patrimonio) return;
+
+        axios.post(baseUrl, {
+            method: 'verificaPatrimonioDisponivel',
+            token,
+            data: { patrimonio, id }
+        }).then(res => {
+            if (!res.data.disponivel) {
+                Swal.fire('Atenção', 'Este número de patrimônio já está cadastrado.', 'warning');
+                $('#patrimonio').val('').focus();
+            }
+        }).catch(() => {
+            Swal.fire('Erro', 'Erro ao verificar patrimônio.', 'error');
+        });
+    });
+</script>
+</body>
+</html>

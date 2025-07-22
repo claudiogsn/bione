@@ -62,7 +62,7 @@ if (isset($data['method']) && isset($data['data'])) {
                 }
                 break;
 
-            case 'getMaterial':
+            case 'getMaterialById':
                 if (isset($requestData['id'])) {
                     $response = MaterialController::getMaterialById($requestData['id']);
                 } else {
@@ -72,8 +72,8 @@ if (isset($data['method']) && isset($data['data'])) {
 
                 // Métodos para PatrimonioController
             case 'addPatrimonio':
-                if (isset($requestData['material_id'], $requestData['data'])) {
-                    $response = MaterialController::addPatrimonio($requestData['material_id'], $requestData['data']);
+                if (isset($requestData['material_id'])){
+                    $response = MaterialController::addPatrimonio($requestData['material_id'],$requestData);
                 } else {
                     throw new Exception("Campos obrigatórios: material_id e data.");
                 }
@@ -95,12 +95,22 @@ if (isset($data['method']) && isset($data['data'])) {
                 }
                 break;
 
-            case 'listPatrimonios':
+            case 'listPatrimoniosByMaterial':
                 if (isset($requestData['material_id'])) {
                     $response = MaterialController::listPatrimoniosByMaterial($requestData['material_id']);
                 } else {
                     throw new Exception("Campo obrigatório: material_id.");
                 }
+                break;
+            case 'verificaPatrimonioDisponivel':
+                if (isset($requestData['patrimonio'])) {
+                    $response = MaterialController::verificaPatrimonioDisponivel($requestData['patrimonio']);
+                } else {
+                    throw new Exception("Campo obrigatório: patrimonio.");
+                }
+                break;
+            case 'listPatrimonios':
+                    $response = MaterialController::listPatrimonios();
                 break;
 
             case 'listPatrimoniosAgrupado':

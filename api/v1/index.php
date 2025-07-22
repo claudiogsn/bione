@@ -6,6 +6,7 @@ require_once 'controllers/ClienteController.php';
 require_once 'controllers/EventController.php';
 require_once 'controllers/MaterialController.php';
 require_once 'controllers/UserController.php';
+require_once 'controllers/FaturaController.php';
 
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
@@ -330,6 +331,47 @@ if (isset($data['method']) && isset($data['data'])) {
                     $response = array('error' => 'Parâmetro cnpj ausente');
                 }
                 break;
+
+            case 'getFatura':
+                if (isset($requestData['documento_os'])) {
+                    $response = FaturaController::getFatura($requestData['documento_os']);
+                } else {
+                    throw new Exception("Campo obrigatório: documento_os");
+                }
+                break;
+
+            case 'createFatura':
+                if (!empty($requestData)) {
+                    $response = FaturaController::createFatura($requestData);
+                } else {
+                    throw new Exception("Dados da fatura não enviados");
+                }
+                break;
+
+            case 'updateFaturaStatus':
+                if (isset($requestData['documento_os']) && isset($requestData['status'])) {
+                    $response = FaturaController::updateFaturaStatus($requestData['documento_os'], $requestData['status']);
+                } else {
+                    throw new Exception("Campos obrigatórios: documento_os e status");
+                }
+                break;
+
+            case 'generateFaturaByOrder':
+                if (isset($requestData['documento'])) {
+                    $response = FaturaController::generateFaturaByOrder($requestData['documento']);
+                } else {
+                    throw new Exception("Campo obrigatório: documento");
+                }
+                break;
+
+            case 'generateFaturaPdf':
+                if (isset($requestData['documento_os'])) {
+                    $response = FaturaController::generateFaturaPdf($requestData['documento_os']);
+                } else {
+                    throw new Exception("Campo obrigatório: documento_os");
+                }
+                break;
+
 
             default:
                 http_response_code(405);

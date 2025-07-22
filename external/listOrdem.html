@@ -51,6 +51,7 @@
                 <table class="table table-striped table-hover" id="tabela-os">
                     <thead>
                     <tr>
+                        <th style="width: 40px; padding: 0;" class="text-center"></th>
                         <th style="width: 28px; padding: 0;" class="text-center"></th>
                         <th style="width: 28px; padding: 0;" class="text-center"></th>
                         <th style="width: 28px; padding: 0;" class="text-center"></th>
@@ -91,6 +92,22 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="modalPdfFatura" tabindex="-1" role="dialog" aria-labelledby="pdfLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document" style="max-width: 95%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Fatura Gerada</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-0" style="height: 90vh;">
+                <iframe id="iframePdfFatura" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 
@@ -110,12 +127,13 @@
     let hasPermition = null;
 
     const statusMap = {
-        "0": { label: "Removida", color: "danger" },
-        "1": { label: "Em Aprovação", color: "warning" },
-        "2": { label: "Aprovada", color: "info" },
-        "3": { label: "Em Montagem", color: "primary" },
+        "0": { label: "Removida", color: "red" },
+        "1": { label: "Em Aprovação", color: "orange" },
+        "2": { label: "Aprovada", color: "blue" },
+        "3": { label: "Em Montagem", color: "blue-grey" },
         "4": { label: "Em Andamento", color: "blue" },
-        "5": { label: "Finalizada", color: "success" }
+        "5": { label: "Finalizada", color: "green" },
+        "6": { label: "Faturada", color: "deep-purple" },
     };
 
 
@@ -125,6 +143,7 @@
         const hoje = new Date();
         const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
         const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+
 
         $('#dataInicio').val(primeiroDia.toISOString().split('T')[0]);
         $('#dataFim').val(ultimoDia.toISOString().split('T')[0]);
@@ -174,8 +193,6 @@
         }
     }
 
-
-
     async function carregarOrdens() {
         const data_inicio = $('#dataInicio').val();
         const data_fim = $('#dataFim').val();
@@ -195,33 +212,59 @@
             tbody.empty();
 
             res.data.orders.forEach(ordem => {
-                const statusObj = statusMap[ordem.status] || { label: "Desconhecido", color: "default" };
-                const statusHtml = `<span class="label label-${statusObj.color}">${statusObj.label}</span>`;
+                // Fatura
+                let colFatura = '';
+                if (hasPermition) {
+                    if (ordem.status === "6") {
+                        colFatura = `
+                        <a href="#" onclick="event.stopPropagation(); visualizarFatura('${ordem.documento}')" title="Visualizar Fatura">
+                            <i class="fas fa-file-invoice-dollar purple"></i>
+                        </a>`;
+                    } else {
+                        colFatura = `
+                        <a href="#" onclick="event.stopPropagation(); gerarFatura('${ordem.documento}')" title="Gerar Fatura">
+                            <i class="fas fa-file-invoice green"></i>
+                        </a>`;
+                    }
+                }
 
+                // Status
+                const statusObj = statusMap[ordem.status] || { label: "Desconhecido", color: "default" };
+                const statusHtml = `<span class="label bg-${statusObj.color}">${statusObj.label}</span>`;
+
+                // Editar
                 const colEditar = hasPermition
-                    ? `<a href="#" onclick="editarOrdem('${ordem.documento}')" title="Editar">
+                    ? `<a href="#" onclick="event.stopPropagation(); editarOrdem('${ordem.documento}')" title="Editar">
                         <i class="fas fa-edit green"></i>
                    </a>`
                     : '';
 
+                // Exportar Detalhada
                 const colDetalhada = hasPermition
-                    ? `<a href="#" onclick="exportarOrdemDetalhada('${ordem.documento}')" title="Exportar Detalhada">
+                    ? `<a href="#" onclick="event.stopPropagation(); exportarOrdemDetalhada('${ordem.documento}')" title="Exportar Detalhada">
                         <i class="fas fa-file-alt blue"></i>
                    </a>`
                     : '';
 
+                // Linha
                 const row = `
-            <tr onclick="abrirModalOrdem('${ordem.documento}')" style="cursor: pointer;">
-                <td class="text-center">${colEditar}</td>
-                <td class="text-center"><a href="#" onclick="exportarOrdem('${ordem.documento}')" title="Exportar OS"><i class="fas fa-file-pdf red"></i></a></td>
-                <td class="text-center">${colDetalhada}</td>
-                <td>${ordem.documento}</td>
-                <td>${ordem.nome_evento}</td>
-                <td>${ordem.nome_cliente}</td>
-                <td>${formatarData(ordem.data_montagem)}</td>
-                <td>${formatarData(ordem.data_evento_inicio)}</td>
-                <td>${statusHtml}</td>
-            </tr>`;
+                <tr onclick="abrirModalOrdem('${ordem.documento}')" style="cursor: pointer;">
+                    <td class="text-center">${colEditar}</td>
+                    <td class="text-center">
+                        <a href="#" onclick="event.stopPropagation(); exportarOrdem('${ordem.documento}')" title="Exportar OS">
+                            <i class="fas fa-file-pdf red"></i>
+                        </a>
+                    </td>
+                    <td class="text-center">${colDetalhada}</td>
+                    <td class="text-center">${colFatura}</td>
+                    <td>${ordem.documento}</td>
+                    <td>${ordem.nome_evento}</td>
+                    <td>${ordem.nome_cliente}</td>
+                    <td>${formatarData(ordem.data_montagem)}</td>
+                    <td>${formatarData(ordem.data_evento_inicio)}</td>
+                    <td>${statusHtml}</td>
+                </tr>`;
+
                 tbody.append(row);
             });
         } catch (err) {
@@ -389,6 +432,31 @@
         } catch (err) {
             Swal.fire('Erro', 'Erro ao carregar detalhes da ordem.', 'error');
         }
+    }
+
+    async function visualizarFatura(documento) {
+        try {
+            Swal.fire({ title: 'Carregando fatura...', didOpen: () => Swal.showLoading() });
+
+            const gerarPdf = await axios.post(baseUrl, {
+                method: "generateFaturaPdf",
+                token,
+                data: { documento_os: documento }
+            });
+
+            if (!gerarPdf.data.success) throw new Error(gerarPdf.data.message);
+
+            Swal.close();
+            visualizarPdfEmModal(gerarPdf.data.url);
+
+        } catch (err) {
+            Swal.fire('Erro', err.message || 'Erro ao abrir fatura.', 'error');
+        }
+    }
+
+    function visualizarPdfEmModal(url) {
+        $('#iframePdfFatura').attr('src', url);
+        $('#modalPdfFatura').modal('show');
     }
 
 

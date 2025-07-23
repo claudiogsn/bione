@@ -246,6 +246,22 @@ if (isset($data['method']) && isset($data['data'])) {
                 }
                 break;
 
+            case 'generateOrdemServicoPdf':
+                if (isset($requestData['documento'])) {
+                    $response = OrderServiceController::generateOrdemServicoPdf($requestData['documento']);
+                } else {
+                    throw new Exception("Campo obrigatório: documento");
+                }
+                break;
+
+            case 'generatePropostaPdf':
+                if (isset($requestData['documento'])) {
+                    $response = OrderServiceController::generatePropostaPdf($requestData['documento']);
+                } else {
+                    throw new Exception("Campo obrigatório: documento");
+                }
+                break;
+
             case 'listOrdersByEvento':
                 if (isset($requestData['evento_id'])) {
                     $response = OrderServiceController::listOrdersByEvento($requestData['evento_id']);
@@ -375,8 +391,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 break;
 
             case 'generateFaturaPdf':
-                if (isset($requestData['documento_os'])) {
-                    $response = FaturaController::generateFaturaPdf($requestData['documento_os']);
+                if (isset($requestData['documento'])) {
+                    $response = FaturaController::generateFaturaPdf($requestData['documento']);
                 } else {
                     throw new Exception("Campo obrigatório: documento_os");
                 }

@@ -97,7 +97,7 @@
     <div class="modal-dialog modal-lg" role="document" style="max-width: 95%;">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title">Fatura Gerada</h4>
+                <h4 class="modal-title">Documento Gerado</h4>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -105,9 +105,18 @@
             <div class="modal-body p-0" style="height: 90vh;">
                 <iframe id="iframePdfFatura" style="width: 100%; height: 100%; border: none;"></iframe>
             </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <div>
+                    <button class="btn btn-success" onclick="baixarPdfAtual()">📥 Baixar</button>
+                    <button class="btn btn-info" onclick="imprimirPdfAtual()">🖨️ Imprimir</button>
+                    <button class="btn btn-primary" onclick="compartilharPdfAtual()">🔗 Compartilhar</button>
+                </div>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+            </div>
         </div>
     </div>
 </div>
+
 
 
 
@@ -278,11 +287,15 @@
     }
 
     function exportarOrdem(documento) {
-        window.open(`${baseUrlRedirect}/printOs.html?documento=${documento}`, '_blank');
+        exportarDocumento(documento, 'os');
     }
 
     function exportarOrdemDetalhada(documento) {
-        window.open(`${baseUrlRedirect}/printOsDetalhada.html?documento=${documento}`, '_blank');
+        exportarDocumento(documento, 'proposta');
+    }
+
+    function visualizarFatura(documento) {
+        exportarDocumento(documento, 'fatura');
     }
 
     function formatarData(dataStr) {
@@ -435,14 +448,31 @@
         }
     }
 
-    async function visualizarFatura(documento) {
+
+    async function exportarDocumento(documento, tipo) {
         try {
-            Swal.fire({ title: 'Carregando fatura...', didOpen: () => Swal.showLoading() });
+            let metodo;
+
+            switch (tipo) {
+                case 'os':
+                    metodo = "generateOrdemServicoPdf";
+                    break;
+                case 'proposta':
+                    metodo = "generatePropostaPdf";
+                    break;
+                case 'fatura':
+                    metodo = "generateFaturaPdf";
+                    break;
+                default:
+                    throw new Error("Tipo de documento inválido.");
+            }
+
+            Swal.fire({ title: 'Gerando documento...', didOpen: () => Swal.showLoading() });
 
             const gerarPdf = await axios.post(baseUrl, {
-                method: "generateFaturaPdf",
+                method: metodo,
                 token,
-                data: { documento_os: documento }
+                data: { documento: documento }
             });
 
             if (!gerarPdf.data.success) throw new Error(gerarPdf.data.message);
@@ -451,9 +481,10 @@
             visualizarPdfEmModal(gerarPdf.data.url);
 
         } catch (err) {
-            Swal.fire('Erro', err.message || 'Erro ao abrir fatura.', 'error');
+            Swal.fire('Erro', err.message || 'Erro ao gerar documento.', 'error');
         }
     }
+
 
     async function gerarFatura(documento) {
         try {
@@ -487,11 +518,48 @@
     }
 
 
+    let urlPdfAtual = ''; // armazenar URL atual exibida no iframe
 
     function visualizarPdfEmModal(url) {
+        urlPdfAtual = url;
         $('#iframePdfFatura').attr('src', url);
         $('#modalPdfFatura').modal('show');
     }
+
+    function baixarPdfAtual() {
+        if (!urlPdfAtual) return;
+        const a = document.createElement('a');
+        a.href = urlPdfAtual;
+        a.download = 'documento.pdf';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function imprimirPdfAtual() {
+        const iframe = document.getElementById('iframePdfFatura');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+
+    async function compartilharPdfAtual() {
+        if (!navigator.canShare || !navigator.canShare({ url: urlPdfAtual })) {
+            return Swal.fire('Aviso', 'Seu navegador não suporta compartilhamento.', 'warning');
+        }
+
+        try {
+            await navigator.share({
+                title: 'Documento Gerado',
+                text: 'Confira este PDF gerado:',
+                url: urlPdfAtual
+            });
+        } catch (err) {
+            console.warn('Compartilhamento cancelado ou falhou:', err);
+        }
+    }
+
 
 
 

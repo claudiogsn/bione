@@ -2,9 +2,17 @@
 header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../database/db.php';
+require_once __DIR__ . '/../libs/dompdf/autoload.inc.php';
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class OrderServiceController
 {
+    public static function removerPrefixoOs($documento)
+    {
+        return preg_replace('/^OS-/', '', $documento);
+    }
+
     public static function createOrUpdateOrder($data)
     {
         global $pdo;
@@ -322,7 +330,6 @@ class OrderServiceController
         return ['success' => true, 'orders' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
 
-
     public static function listMetodosPagamento()
     {
         global $pdo;
@@ -356,6 +363,343 @@ class OrderServiceController
             return ['success' => false, 'message' => 'Erro ao atualizar status: ' . $e->getMessage()];
         }
     }
+
+    public static function generateOrdemServicoPdf($documento)
+    {
+
+        $response = self::getOrderDetailsByDocumento($documento);
+
+        if (!$response['success']) {
+            return ['success' => false, 'message' => 'Dados da OS não encontrados.'];
+        }
+
+        $data = $response['details'];
+        $order = $data['order'];
+        $cliente = $data['cliente'];
+        $evento = $data['evento'];
+        $itens = $data['itens'];
+        $services = $data['services'];
+
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html lang="pt-br">
+        <head>
+            <meta charset="UTF-8">
+            <title>Ordem de Serviço</title>
+            <style>
+                body {
+                    font-family: Calibri, sans-serif;
+                    font-size: 12px;
+                    padding: 15px;
+                    color: #000;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 8px;
+                }
+                table, th, td {
+                    border: 0.1px solid #000;
+                }
+                th, td {
+                    padding: 5px;
+                    text-align: left;
+                }
+                h2 { margin: 8px 0; }
+                .rodape {
+                    text-align: center;
+                    font-size: 10px;
+                    margin-top: 30px;
+                }
+                .header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                }
+                .header img {
+                    height: 100px;
+                }
+            </style>
+        </head>
+        <body>
+        <div class="header">
+            <div style='position: absolute; top: 0; right: 0;'>
+                <img src="https://bionetecnologia.com.br/crm/external/imagens/logo_os.png" alt="Logo Bione">
+            </div>
+            <div>
+                <h2>Ordem de Serviço</h2>
+                <div><b>Cliente:</b> <?= $cliente['nome'] ?></div>
+                <div><b>CNPJ:</b> <?= $cliente['cpf_cnpj'] ?></div>
+                <div><b>Telefone:</b> <?= $cliente['telefone'] ?></div>
+                <div><b>Email:</b> <?= $cliente['email'] ?></div>
+            </div>
+        </div>
+
+        <center><h2><?= $order['documento'] ?></h2></center>
+        <div><b>Evento:</b> <?= $evento['nome'] ?></div>
+        <div><b>Local:</b> <?= $evento['local'] ?></div>
+        <div><b>Endereço:</b> <?= $evento['endereco'] ?></div>
+        <div><b>Período:</b> <?= date('d/m/Y H:i', strtotime($evento['data_inicio'])) ?> à <?= date('d/m/Y H:i', strtotime($evento['data_fim'])) ?></div>
+        <hr>
+        <div><b>Local Montagem:</b> <?= $order['local_montagem'] ?></div>
+        <div><b>Montagem:</b> <?= date('d/m/Y H:i', strtotime($order['data_montagem'])) ?>
+            <b>Recolhimento:</b> <?= date('d/m/Y', strtotime($order['data_recolhimento'])) ?></div>
+        <div><b>Contato:</b> <?= $order['contato_montagem'] ?></div>
+
+        <?php if (count($itens)): ?>
+            <h3>Itens</h3>
+            <table>
+                <thead style="background-color: #015e9b; color: white;">
+                <tr><th>Descrição</th><th>Qtd</th><th>Período</th></tr>
+                </thead>
+                <tbody>
+                <?php
+                $total = 0;
+                foreach ($itens as $item):
+                    ?>
+                    <tr>
+                        <td><?= $item['descricao'] ?></td>
+                        <td><?= $item['quantidade'] ?></td>
+                        <td><?= date('d/m', strtotime($item['data_inicial'])) ?> - <?= date('d/m', strtotime($item['data_final'])) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <?php if (count($services)): ?>
+            <h3>Serviços</h3>
+            <table>
+                <thead style="background-color: #015e9b; color: white;"><tr><th>Serviço</th><th>Qtd</th><th>Data</th></tr></thead>
+                <tbody>
+                <?php foreach ($services as $s): ?>
+                    <tr>
+                        <td><?= $s['descricao'] ?></td>
+                        <td><?= $s['quantidade'] ?></td>
+                        <td><?= date('d/m', strtotime($s['data_inicial'])) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <p><b>Observações:</b><br><?= nl2br($order['observacao'] ?: 'Nenhuma observação.') ?></p>
+
+        <div class="rodape">
+            Bione Alugueis e Servicos de Informatica LTDA / CNPJ: 11.204.447/0001-07<br>
+            Rua Luiza Maria da Conceicao, 187, Renascer - Cabedelo – PB<br>
+            FONE: (83) 98871-9620
+        </div>
+        </body>
+        </html>
+        <?php
+
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf((new Options())->set('isRemoteEnabled', true));
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper([0, 0, 595.28, 841.89]); // A4
+        $dompdf->render();
+
+        $safeCliente = preg_replace('/[^a-zA-Z0-9]/', '_', $cliente['nome']);
+        $fileName = 'OS_' . $safeCliente . '_' . $order['documento'] . '.pdf';
+        $filePath = __DIR__ . '/../public/orders/' . $fileName;
+        $publicUrl = 'https://bionetecnologia.com.br/crm/api/v1/public/orders/' . $fileName;
+
+        if (!is_dir(dirname($filePath))) {
+            mkdir(dirname($filePath), 0777, true);
+        }
+
+        file_put_contents($filePath, $dompdf->output());
+
+        return [
+            'success' => true,
+            'url' => $publicUrl
+        ];
+    }
+
+    public static function generatePropostaPdf($documento)
+    {
+
+        $response = self::getOrderDetailsByDocumento($documento);
+
+        if (!$response['success']) {
+            return ['success' => false, 'message' => 'Dados da OS não encontrados.'];
+        }
+
+        $data = $response['details'];
+        $order = $data['order'];
+        $cliente = $data['cliente'];
+        $evento = $data['evento'];
+        $itens = $data['itens'];
+        $services = $data['services'];
+        $payments = $data['payments'];
+
+        ob_start();
+        ?>
+        <!DOCTYPE html>
+        <html lang="pt-br">
+        <head>
+            <meta charset="UTF-8">
+            <title>Proposta de Locação</title>
+            <style>
+                body {
+                    font-family: Calibri, sans-serif;
+                    font-size: 12px;
+                    padding: 15px;
+                    color: #000;
+                }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-top: 8px;
+                }
+                table, th, td {
+                    border: 0.1px solid #000;
+                }
+                th, td {
+                    padding: 5px;
+                    text-align: left;
+                }
+                h2 { margin: 8px 0; }
+                .rodape {
+                    text-align: center;
+                    font-size: 10px;
+                    margin-top: 30px;
+                }
+                .header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 15px;
+                }
+                .header img {
+                    height: 100px;
+                }
+            </style>
+        </head>
+        <body>
+        <div class="header">
+            <div style='position: absolute; top: 0; right: 0;'>
+                <img src="https://bionetecnologia.com.br/crm/external/imagens/logo_os.png" alt="Logo Bione">
+            </div>
+            <div>
+                <h2>Proposta de Locação</h2>
+                <div><b>Cliente:</b> <?= $cliente['nome'] ?></div>
+                <div><b>CNPJ:</b> <?= $cliente['cpf_cnpj'] ?></div>
+                <div><b>Telefone:</b> <?= $cliente['telefone'] ?></div>
+                <div><b>Email:</b> <?= $cliente['email'] ?></div>
+            </div>
+        </div>
+
+        <center><h2> Proposta <?=self::removerPrefixoOs($order['documento'])?></h2></center>
+        <div><b>Evento:</b> <?= $evento['nome'] ?></div>
+        <div><b>Local:</b> <?= $evento['local'] ?></div>
+        <div><b>Endereço:</b> <?= $evento['endereco'] ?></div>
+        <div><b>Período:</b> <?= date('d/m/Y H:i', strtotime($evento['data_inicio'])) ?> à <?= date('d/m/Y H:i', strtotime($evento['data_fim'])) ?></div>
+
+        <?php if (count($itens)): ?>
+            <h3>Itens</h3>
+            <table>
+                <thead style="background-color: #015e9b; color: white;">
+                <tr><th>Descrição</th><th>Qtd</th><th>Período</th><th>Valor</th><th>Subtotal</th></tr>
+                </thead>
+                <tbody>
+                <?php
+                $total = 0;
+                foreach ($itens as $item):
+                    $subtotal = $item['quantidade'] * $item['valor'] * $item['dias_uso'];
+                    $total += $subtotal;
+                    ?>
+                    <tr>
+                        <td><?= $item['descricao'] ?></td>
+                        <td><?= $item['quantidade'] ?></td>
+                        <td><?= date('d/m', strtotime($item['data_inicial'])) ?> - <?= date('d/m', strtotime($item['data_final'])) ?></td>
+                        <td>R$ <?= number_format($item['valor'], 2, ',', '.') ?></td>
+                        <td>R$ <?= number_format($subtotal, 2, ',', '.') ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+                <tfoot>
+                <tr>
+                    <td colspan="4" style="text-align: right"><strong>Total:</strong></td>
+                    <td><strong>R$ <?= number_format($total, 2, ',', '.') ?></strong></td>
+                </tr>
+                </tfoot>
+            </table>
+        <?php endif; ?>
+
+        <?php if (count($services)): ?>
+            <h3>Serviços</h3>
+            <table>
+                <thead style="background-color: #015e9b; color: white;"><tr><th>Serviço</th><th>Qtd</th><th>Data</th></tr></thead>
+                <tbody>
+                <?php foreach ($services as $s): ?>
+                    <tr>
+                        <td><?= $s['descricao'] ?></td>
+                        <td><?= $s['quantidade'] ?></td>
+                        <td><?= date('d/m', strtotime($s['data_inicial'])) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+        <?php if (count($payments)): ?>
+            <h3>Pagamentos</h3>
+            <table>
+                <thead style="background-color: #015e9b; color: white;"><tr><th>Forma</th><th>Valor</th><th>Data</th><th>Descrição</th></tr></thead>
+                <tbody>
+                <?php foreach ($payments as $pg): ?>
+                    <tr>
+                        <td><?= $pg['forma_nome'] ?? '---' ?></td>
+                        <td>R$ <?= number_format($pg['valor_pg'], 2, ',', '.') ?></td>
+                        <td><?= date('d/m/Y', strtotime($pg['data_pg'])) ?></td>
+                        <td><?= nl2br($pg['forma_descricao']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+
+
+        <div><p>Essa proposta tem validade de 30 dias</p></div>
+        <div class="rodape">
+            Bione Alugueis e Servicos de Informatica LTDA / CNPJ: 11.204.447/0001-07<br>
+            Rua Luiza Maria da Conceicao, 187, Renascer - Cabedelo – PB<br>
+            FONE: (83) 98871-9620
+        </div>
+        </body>
+        </html>
+        <?php
+
+        $html = ob_get_clean();
+
+        $dompdf = new Dompdf((new Options())->set('isRemoteEnabled', true));
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper([0, 0, 595.28, 841.89]); // A4
+        $dompdf->render();
+
+        $safeCliente = preg_replace('/[^a-zA-Z0-9]/', '_', $cliente['nome']);
+        $fileName = 'PROPOSTA_' . $safeCliente . '_' . $order['documento'] . '.pdf';
+        $filePath = __DIR__ . '/../public/proposta/' . $fileName;
+        $publicUrl = 'https://bionetecnologia.com.br/crm/api/v1/public/proposta/' . $fileName;
+
+        if (!is_dir(dirname($filePath))) {
+            mkdir(dirname($filePath), 0777, true);
+        }
+
+        file_put_contents($filePath, $dompdf->output());
+
+        return [
+            'success' => true,
+            'url' => $publicUrl
+        ];
+    }
+
+
 
 
 }

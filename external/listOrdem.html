@@ -528,9 +528,11 @@
 
     function baixarPdfAtual() {
         if (!urlPdfAtual) return;
+        const fileName = urlPdfAtual.split('/').pop() || 'documento.pdf';
+
         const a = document.createElement('a');
         a.href = urlPdfAtual;
-        a.download = 'documento.pdf';
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);

@@ -25,3 +25,6 @@ Thumbs.db
 # Ignorar arquivos de sistema do Linux
 *.swp
 
+/api/v1/public
+/app/images/photos
+

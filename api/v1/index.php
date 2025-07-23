@@ -47,8 +47,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 break;
 
             case 'updateMaterial':
-                if (isset($requestData['id'], $requestData['data'])) {
-                    $response = MaterialController::updateMaterial($requestData['id'], $requestData['data']);
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::updateMaterial($requestData['id'], $requestData);
                 } else {
                     throw new Exception("Campos obrigatórios: id e data.");
                 }
@@ -80,8 +80,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 break;
 
             case 'updatePatrimonio':
-                if (isset($requestData['id'], $requestData['data'])) {
-                    $response = MaterialController::updatePatrimonio($requestData['id'], $requestData['data']);
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::updatePatrimonio($requestData['id'], $requestData);
                 } else {
                     throw new Exception("Campos obrigatórios: id e data.");
                 }
@@ -130,8 +130,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 break;
 
             case 'updateCategoria':
-                if (isset($requestData['id'], $requestData['data'])) {
-                    $response = MaterialController::updateCategoria($requestData['id'], $requestData['data']);
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::updateCategoria($requestData['id'], $requestData);
                 } else {
                     throw new Exception("Campos obrigatórios: id e data.");
                 }
@@ -157,8 +157,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 break;
 
             case 'updateFabricante':
-                if (isset($requestData['id'], $requestData['data'])) {
-                    $response = MaterialController::updateFabricante($requestData['id'], $requestData['data']);
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::updateFabricante($requestData['id'], $requestData);
                 } else {
                     throw new Exception("Campos obrigatórios: id e data.");
                 }
@@ -193,8 +193,8 @@ if (isset($data['method']) && isset($data['data'])) {
                 break;
 
             case 'updateServico':
-                if (isset($requestData['id'], $requestData['data'])) {
-                    $response = MaterialController::updateServico($requestData['id'], $requestData['data']);
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::updateServico($requestData['id'], $requestData);
                 } else {
                     throw new Exception("Campos obrigatórios: id e data.");
                 }

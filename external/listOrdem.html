@@ -545,20 +545,29 @@
     }
 
     async function compartilharPdfAtual() {
-        if (!navigator.canShare || !navigator.canShare({ url: urlPdfAtual })) {
-            return Swal.fire('Aviso', 'Seu navegador não suporta compartilhamento.', 'warning');
-        }
+        if (!urlPdfAtual) return;
 
         try {
+            const response = await fetch(urlPdfAtual);
+            const blob = await response.blob();
+
+            const file = new File([blob], 'documento.pdf', { type: 'application/pdf' });
+
+            if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
+                return Swal.fire('Aviso', 'Seu navegador não suporta compartilhamento de arquivos.', 'warning');
+            }
+
             await navigator.share({
                 title: 'Documento Gerado',
-                text: 'Confira este PDF gerado:',
-                url: urlPdfAtual
+                text: 'Confira este PDF:',
+                files: [file]
             });
         } catch (err) {
-            console.warn('Compartilhamento cancelado ou falhou:', err);
+            console.error(err);
+            Swal.fire('Erro', 'Erro ao compartilhar o PDF.', 'error');
         }
     }
+
 
 
 

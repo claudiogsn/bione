@@ -171,9 +171,14 @@
 <div class="modal fade" id="modalClientes" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
+
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h4 class="modal-title">Selecionar Cliente</h4>
+                <button class="btn btn-primary btn-sm" onclick="abrirCadastroIframe('Novo Cliente', 'https://bionetecnologia.com.br/crm/external/createCliente.html')">
+                    <i class="fa fa-plus"></i> Novo Cliente
+                </button>
             </div>
+
             <div class="modal-body">
                 <input type="text" class="form-control" id="filtro-clientes" placeholder="Buscar cliente..." onkeyup="filtrarTabela('filtro-clientes', 'tabela-clientes')">
                 <br>
@@ -188,17 +193,24 @@
                     <tbody></tbody>
                 </table>
             </div>
+
         </div>
     </div>
 </div>
+
 
 <!-- Modal Eventos -->
 <div class="modal fade" id="modalEventos" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header">
+
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h4 class="modal-title">Selecionar Evento</h4>
+                <button class="btn btn-primary btn-sm" onclick="abrirCadastroIframe('Novo Evento', 'https://bionetecnologia.com.br/crm/external/createEvento.html')">
+                    <i class="fa fa-plus"></i> Novo Evento
+                </button>
             </div>
+
             <div class="modal-body">
                 <input type="text" class="form-control" id="filtro-eventos" placeholder="Buscar evento..." onkeyup="filtrarTabela('filtro-eventos', 'tabela-eventos')">
                 <br>
@@ -214,9 +226,11 @@
                     <tbody></tbody>
                 </table>
             </div>
+
         </div>
     </div>
 </div>
+
 
 <!-- Modal Itens -->
 <div class="modal fade" id="modalItens" tabindex="-1" role="dialog">
@@ -289,6 +303,20 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal genérico para cadastros via iframe -->
+<div class="modal fade" id="modalCadastroIframe" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="iframeModalTitle">Novo Cadastro</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:0;">
+                <iframe id="iframeCadastro" src="" width="100%" height="600px" frameborder="0"></iframe>
             </div>
         </div>
     </div>

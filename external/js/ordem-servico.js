@@ -622,6 +622,24 @@ const formatDateOnly = (date) => {
     return dataFormatada;
 };
 
+$('#modalCadastroIframe').on('hidden.bs.modal', function () {
+    if ($('#modalClientes').hasClass('in')) {
+        abrirModalClientes(); // ou atualizar DataTable
+    }
+    if ($('#modalEventos').hasClass('in')) {
+        abrirModalEventos(); // ou atualizar DataTable
+    }
+});
+
+function abrirCadastroIframe(titulo, baseUrl) {
+    const urlComToken = `${baseUrl}?token=${token}`;
+
+    $('#iframeCadastro').attr('src', urlComToken);
+    $('#iframeModalTitle').text(titulo);
+    $('#modalCadastroIframe').modal('show');
+}
+
+
 
 
 

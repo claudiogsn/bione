@@ -242,6 +242,15 @@
                 const res = await axios.post(`${baseUrl}/api/v1/index.php`, body);
                 if (res.data.success) {
                     Swal.fire('Sucesso', 'Cliente cadastrado com sucesso!', 'success');
+                    // Limpa manualmente os campos mascarados
+                    cpfCnpjInput.value = '';
+                    telefoneInput.value = '';
+                    cepInput.value = '';
+                    enderecoInput.value = '';
+                    numeroInput.value = '';
+                    bairroInput.value = '';
+                    cidadeInput.value = '';
+                    estadoInput.value = '';
                     form.reset();
                 } else {
                     Swal.fire('Erro', res.data.message || 'Erro ao salvar.', 'error');
@@ -290,6 +299,15 @@
                 const res = await axios.post(`${baseUrl}/api/v1/index.php`, body);
                 if (res.data.success) {
                     Swal.fire('Sucesso', 'Cliente cadastrado com sucesso!', 'success');
+                    // Limpa manualmente os campos mascarados
+                    cpfCnpjInput.value = '';
+                    telefoneInput.value = '';
+                    cepInput.value = '';
+                    enderecoInput.value = '';
+                    numeroInput.value = '';
+                    bairroInput.value = '';
+                    cidadeInput.value = '';
+                    estadoInput.value = '';
                     form.reset();
                 } else {
                     Swal.fire('Erro', res.data.message || 'Erro ao salvar.', 'error');

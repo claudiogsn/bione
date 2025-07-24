@@ -171,10 +171,12 @@
 <div class="modal fade" id="modalClientes" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-blue">
+            <div class="modal-header">
                 <h4 class="modal-title">Selecionar Cliente</h4>
             </div>
             <div class="modal-body">
+                <input type="text" class="form-control" id="filtro-clientes" placeholder="Buscar cliente..." onkeyup="filtrarTabela('filtro-clientes', 'tabela-clientes')">
+                <br>
                 <table class="table table-striped table-hover" id="tabela-clientes">
                     <thead>
                     <tr>
@@ -194,10 +196,12 @@
 <div class="modal fade" id="modalEventos" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-blue">
+            <div class="modal-header">
                 <h4 class="modal-title">Selecionar Evento</h4>
             </div>
             <div class="modal-body">
+                <input type="text" class="form-control" id="filtro-eventos" placeholder="Buscar evento..." onkeyup="filtrarTabela('filtro-eventos', 'tabela-eventos')">
+                <br>
                 <table class="table table-striped table-hover" id="tabela-eventos">
                     <thead>
                     <tr>
@@ -218,10 +222,12 @@
 <div class="modal fade" id="modalItens" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-green">
+            <div class="modal-header">
                 <h4 class="modal-title">Selecionar Item</h4>
             </div>
             <div class="modal-body">
+                <input type="text" class="form-control" id="filtro-itens" placeholder="Buscar item..." onkeyup="filtrarTabela('filtro-itens', 'tabela-itens-modal')">
+                <br>
                 <table class="table table-striped table-hover" id="tabela-itens-modal">
                     <thead>
                     <tr>
@@ -242,10 +248,12 @@
 <div class="modal fade" id="modalServicos" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-green">
+            <div class="modal-header ">
                 <h4 class="modal-title">Selecionar Serviço</h4>
             </div>
             <div class="modal-body">
+                <input type="text" class="form-control" id="filtro-servicos" placeholder="Buscar serviço..." onkeyup="filtrarTabela('filtro-servicos', 'tabela-servicos-modal')">
+                <br>
                 <table class="table table-striped table-hover" id="tabela-servicos-modal">
                     <thead>
                     <tr>
@@ -265,10 +273,13 @@
 <div class="modal fade" id="modalPagamentos" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
-            <div class="modal-header bg-green">
+            <div class="modal-header ">
                 <h4 class="modal-title">Selecionar Método de Pagamento</h4>
             </div>
             <div class="modal-body">
+                <input type="text" class="form-control" id="filtro-pagamentos" placeholder="Buscar pagamento..." onkeyup="filtrarTabela('filtro-pagamentos', 'tabela-pagamentos-modal')">
+                <br>
+
                 <table class="table table-striped table-hover" id="tabela-pagamentos-modal">
                     <thead>
                     <tr>
@@ -290,6 +301,30 @@
 <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
 <script src="js/ordem-servico.js"></script>
 <script src="bsb/plugins/jquery-inputmask/jquery.inputmask.bundle.js"></script>
+
+<script>
+    function filtrarTabela(inputId, tabelaId) {
+        const filtro = document.getElementById(inputId).value.toLowerCase();
+        const tabela = document.getElementById(tabelaId);
+        const linhas = tabela.getElementsByTagName("tr");
+
+        for (let i = 1; i < linhas.length; i++) {
+            const colunas = linhas[i].getElementsByTagName("td");
+            let encontrou = false;
+
+            for (let j = 0; j < colunas.length; j++) {
+                const texto = colunas[j].textContent || colunas[j].innerText;
+                if (texto.toLowerCase().indexOf(filtro) > -1) {
+                    encontrou = true;
+                    break;
+                }
+            }
+
+            linhas[i].style.display = encontrou ? "" : "none";
+        }
+    }
+</script>
+
 
 
 </body>

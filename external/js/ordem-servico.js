@@ -163,7 +163,7 @@ function preencherGrid(tabela, dados, preencherLinhaCallback) {
         preencherLinhaCallback(row, dado);
         tbody.append(row);
     });
-    
+
 }
 
 function abrirModalClientes() {
@@ -306,7 +306,7 @@ function adicionarItemSelecionadoComModelo(id, nome, valor_locacao) {
 }
 
 function recalcularItem(rowId) {
-    
+
     const row = $(`#${rowId}`);
     const qtd = parseInt(row.find('.quantidade').val()) || 0;
     const unit = parseFloat(row.find('.valor_unitario').val()) || 0;
@@ -387,7 +387,7 @@ function adicionarServicoSelecionado(id, descricao, valor) {
 }
 
 function recalcularServico(rowId) {
-    
+
     const row = $(`#${rowId}`);
     const valorUnitario = parseFloat(row.find('.valor_unitario_servico').val()) || 0;
     const quantidade = parseInt(row.find('.quantidade_servico').val()) || 1;
@@ -449,7 +449,7 @@ function adicionarPagamentoSelecionado(id, nome) {
         </tr>
     `);
     $('#modalPagamentos').modal('hide');
-    
+
 }
 
 // Adição e remoção de linhas
@@ -621,6 +621,8 @@ const formatDateOnly = (date) => {
     console.log(`Data formatada para input: ${dataFormatada}`);
     return dataFormatada;
 };
+
+
 
 
 

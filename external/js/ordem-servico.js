@@ -163,6 +163,7 @@ function preencherGrid(tabela, dados, preencherLinhaCallback) {
         preencherLinhaCallback(row, dado);
         tbody.append(row);
     });
+    
 }
 
 function abrirModalClientes() {
@@ -210,7 +211,7 @@ function abrirModalEventos() {
                         <td>${ev.nome}</td>
                         <td>${ev.data_inicio}</td>
                         <td>${ev.endereco}</td>
-                        <td><a href="javascript:void(0)" onclick="selecionarEvento(${ev.id}, '${ev.nome}', '${ev.endereco}', '${ev.place_url || ''}')"><i class="fa fa-plus green"></i></a></td>
+                        <td><a href="javascript:void(0)" onclick="selecionarEvento(${ev.id}, '${ev.nome}', '${ev.endereco}', '${ev.place_url || ''}', '${ev.data_inicio}', '${ev.data_fim}')"><i class="fa fa-plus green"></i></a></td>
                     </tr>
                 `);
             });
@@ -218,13 +219,40 @@ function abrirModalEventos() {
     });
 }
 
-function selecionarEvento(id, nome, endereco, place_url) {
+function selecionarEvento(id, nome, endereco, place_url, data_inicio, data_fim) {
     $('#evento_id').val(id);
     $('#evento_nome').val(nome);
     $('#evento_endereco').val(endereco);
     $('#evento_place_url').val(place_url);
+
+    // Converte as datas do evento e aplica os ajustes
+    const dataInicioEvento = new Date(data_inicio);
+    const dataFimEvento = new Date(data_fim);
+
+    const dataMontagem = new Date(dataInicioEvento);
+    dataMontagem.setDate(dataMontagem.getDate() - 1);
+
+    const dataRecolhimento = new Date(dataFimEvento);
+    dataRecolhimento.setDate(dataRecolhimento.getDate() + 1);
+
+    // Formata as datas para input type="datetime-local"
+    function formatDateTimeInput(date) {
+        const pad = n => n.toString().padStart(2, '0');
+        const dataFormatada = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+        console.log(`Data formatada para input: ${dataFormatada}`);
+        return dataFormatada;
+    }
+
+    $('#data_montagem').val(formatDateTimeInput(dataMontagem));
+    $('#data_recolhimento').val(formatDateTimeInput(dataRecolhimento));
+
     $('#modalEventos').modal('hide');
+
+    // Armazena as datas globais do evento para uso posterior em itens/serviços
+    window.DATA_INICIO_EVENTO = data_inicio;
+    window.DATA_FIM_EVENTO = data_fim;
 }
+
 
 function abrirModalItem() {
     $('#modalItens').modal('show');
@@ -278,6 +306,7 @@ function adicionarItemSelecionadoComModelo(id, nome, valor_locacao) {
 }
 
 function recalcularItem(rowId) {
+    
     const row = $(`#${rowId}`);
     const qtd = parseInt(row.find('.quantidade').val()) || 0;
     const unit = parseFloat(row.find('.valor_unitario').val()) || 0;
@@ -320,7 +349,10 @@ function abrirModalServico() {
 
 function adicionarServicoSelecionado(id, descricao, valor) {
     const rowId = `servico-${id}-${Date.now()}`;
-    const hoje = new Date().toISOString().split('T')[0];
+    const dataInicio = formatDateOnly(window.DATA_INICIO_EVENTO);
+    const dataFim = formatDateOnly(window.DATA_FIM_EVENTO);
+
+
 
     $('#tabela-servicos tbody').append(`
         <tr id="${rowId}">
@@ -329,16 +361,16 @@ function adicionarServicoSelecionado(id, descricao, valor) {
                 ${descricao}
             </td>
             <td>
-                <input type="number" class="form-control valor_unitario_servico" value="${valor}" onchange="recalcularServico('${rowId}')">
+                <input type="number" class="form-control valor_unitario_servico valor_reais" value="${valor}" onchange="recalcularServico('${rowId}')">
             </td>
             <td>
                 <input type="number" class="form-control quantidade_servico" value="1" onchange="recalcularServico('${rowId}')">
             </td>
             <td>
-                <input type="date" class="form-control data_inicio_servico" value="${hoje}" onchange="recalcularServico('${rowId}')">
+                <input type="date" class="form-control data_inicio_servico" value="${dataInicio}" onchange="recalcularServico('${rowId}')">
             </td>
             <td>
-                <input type="date" class="form-control data_fim_servico" value="${hoje}" onchange="recalcularServico('${rowId}')">
+                <input type="date" class="form-control data_fim_servico" value="${dataFim}" onchange="recalcularServico('${rowId}')">
             </td>
             <td style="display:none;">
                 <input type="number" class="form-control dias_uso_servico" value="1" readonly>
@@ -355,6 +387,7 @@ function adicionarServicoSelecionado(id, descricao, valor) {
 }
 
 function recalcularServico(rowId) {
+    
     const row = $(`#${rowId}`);
     const valorUnitario = parseFloat(row.find('.valor_unitario_servico').val()) || 0;
     const quantidade = parseInt(row.find('.quantidade_servico').val()) || 1;
@@ -395,7 +428,10 @@ function abrirModalPagamento() {
 
 function adicionarPagamentoSelecionado(id, nome) {
     const rowId = `pagamento-${id}-${Date.now()}`;
-    const hoje = new Date().toISOString().split('T')[0];
+    const dataInicio = window.DATA_INICIO_EVENTO?.split('T')[0] || new Date().toISOString().split('T')[0];
+    const dataFim = window.DATA_FIM_EVENTO?.split('T')[0] || dataInicio;
+
+
 
     $('#tabela-pagamentos tbody').append(`
         <tr id="${rowId}">
@@ -404,7 +440,7 @@ function adicionarPagamentoSelecionado(id, nome) {
                 ${nome}
             </td>
             <td>
-                <input type="date" class="form-control data_pagamento" value="${hoje}">
+                <input type="date" class="form-control data_pagamento" value="">
             </td>
             <td>
                 <input type="number" class="form-control valor_pagamento" value="0.00" onchange="atualizarTotaisOS()">
@@ -413,12 +449,17 @@ function adicionarPagamentoSelecionado(id, nome) {
         </tr>
     `);
     $('#modalPagamentos').modal('hide');
+    
 }
 
 // Adição e remoção de linhas
 function adicionarItem(id, qtd = 1, valor_locacao, modelo = '', nomeExibicao = '') {
     const rowId = `item-${id}-${Date.now()}`;
-    const hoje = new Date().toISOString().split('T')[0];
+    const dataInicio = formatDateOnly(window.DATA_INICIO_EVENTO);
+    const dataFim = formatDateOnly(window.DATA_FIM_EVENTO);
+
+
+
 
     $('#tabela-itens tbody').append(`
         <tr id="${rowId}">
@@ -428,16 +469,16 @@ function adicionarItem(id, qtd = 1, valor_locacao, modelo = '', nomeExibicao = '
             </td>
             <td>${nomeExibicao || 'Item'}</td>
             <td>
-                <input type="number" step="0.01" class="form-control valor_unitario" value="${valor_locacao}" onchange="recalcularItem('${rowId}')">
+                <input type="number" step="0.01" class="form-control valor_unitario valor_reais" value="${valor_locacao}" onchange="recalcularItem('${rowId}')">
             </td>
             <td>
                 <input type="number" class="form-control quantidade" value="${qtd}" onchange="recalcularItem('${rowId}')">
             </td>
             <td>
-                <input type="date" class="form-control data_inicio" value="${hoje}" onchange="recalcularItem('${rowId}')">
+                <input type="date" class="form-control data_inicio" value="${dataInicio}" onchange="recalcularItem('${rowId}')">
             </td>
             <td>
-                <input type="date" class="form-control data_fim" value="${hoje}" onchange="recalcularItem('${rowId}')">
+                <input type="date" class="form-control data_fim" value="${dataFim}" onchange="recalcularItem('${rowId}')">
             </td>
             <td style="display:none;">
                 <input type="number" class="form-control dias_uso" value="1" readonly>
@@ -532,7 +573,8 @@ $(document).on('input', '.quantidade, .valor_unitario, .valor_servico, .valor_pa
 // Renderiza linha de item
 function preencherLinhaItem(row, item) {
     const rowId = `item-${item.material_id}-${Date.now()}`;
-    const hoje = new Date().toISOString().split('T')[0];
+    const dataInicio = window.DATA_INICIO_EVENTO?.split('T')[0] || new Date().toISOString().split('T')[0];
+    const dataFim = window.DATA_FIM_EVENTO?.split('T')[0] || dataInicio;
     const modelo = item.modelo || '';
     const nomeExibicao = item.nome || `Item ${item.material_id}`;
     const valorUnit = parseFloat(item.valor_unitario) || 0;
@@ -544,10 +586,10 @@ function preencherLinhaItem(row, item) {
             <input type="hidden" class="modelo" value="${modelo}">
         </td>
         <td>${nomeExibicao}</td>
-        <td><input type="number" class="form-control valor_unitario" value="${valorUnit}" onchange="recalcularItem('${rowId}')"></td>
+        <td><input type="number" class="form-control valor_unitario valor_reais" value="${valorUnit}" onchange="recalcularItem('${rowId}')"></td>
         <td><input type="number" class="form-control quantidade" value="${quantidade}" onchange="recalcularItem('${rowId}')"></td>
-        <td><input type="date" class="form-control data_inicio" value="${item.data_inicio || hoje}" onchange="recalcularItem('${rowId}')"></td>
-        <td><input type="date" class="form-control data_fim" value="${item.data_fim || hoje}" onchange="recalcularItem('${rowId}')"></td>
+        <input type="date" class="form-control data_inicio" value="${dataInicio}" onchange="recalcularItem('${rowId}')">
+        <input type="date" class="form-control data_fim" value="${dataFim}" onchange="recalcularItem('${rowId}')">
         <td style="display:none;"><input type="number" class="form-control dias_uso" value="1" readonly></td>
         <td><span class="subtotal">R$ 0,00</span></td>
         <td><a href="javascript:void(0)" onclick="$(this).closest('tr').remove(); atualizarTotaisOS();"><i class="fa fa-trash red red"></i></a></td>
@@ -571,3 +613,15 @@ function preencherLinhaPagamento(row, pagamento) {
 function retornarLista() {
     window.location.href = `${baseUrlRedirect}/listOrdem.html?user=${user}&token=${token}`;
 }
+
+const formatDateOnly = (date) => {
+    date = new Date(date);
+    const pad = n => n.toString().padStart(2, '0');
+    const dataFormatada = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    console.log(`Data formatada para input: ${dataFormatada}`);
+    return dataFormatada;
+};
+
+
+
+

@@ -3,11 +3,60 @@ header('Content-Type: application/json; charset=utf-8');
 
 require_once __DIR__ . '/../database/db.php';
 require_once __DIR__ . '/../libs/dompdf/autoload.inc.php';
+
+
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
+
+
 class OrderServiceController
 {
+
+
+    public static function generateQrBase64($url){
+        $endpoint = 'https://smiley.codes/qrcode/generator.php';
+
+        $payload = [
+            'inputstring'       => $url,
+            'version'           => '5',
+            'quietzone'         => 'on',
+            'circularmodules'   => 'on',
+            'circleradius'      => '0.45',
+            'squarefinder'      => 'on',
+            'squarealignment'   => 'on',
+            'connectpaths'      => 'on',
+            'logo'              => '',
+            'logoscale'         => '25',
+            'clearlogospace'    => 'on',
+            'qrcode_dark'      => '282828',
+            'qrcode_light'      => 'eaeaea',
+            'qrcode_logo'       => '000000'
+        ];
+
+        $ch = curl_init($endpoint);
+        curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_HTTPHEADER     => [
+                'Content-Type: application/json;charset=UTF-8',
+                'Accept: application/json',
+            ],
+            CURLOPT_POSTFIELDS     => json_encode($payload),
+        ]);
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        if (!$response) {
+            return null;
+        }
+
+        $data = json_decode($response, true);
+
+        return $data['qrcode'] ?? null; // <- isso já é o base64 da imagem
+    }
+
     public static function removerPrefixoOs($documento)
     {
         return preg_replace('/^OS-/', '', $documento);
@@ -369,6 +418,10 @@ class OrderServiceController
 
         $response = self::getOrderDetailsByDocumento($documento);
 
+        $urlQrCode = "https://bionetecnologia.com.br/os/".self::removerPrefixoOs($documento);
+
+        $qrcodeBase64 = self::generateQrBase64($urlQrCode);
+
         if (!$response['success']) {
             return ['success' => false, 'message' => 'Dados da OS não encontrados.'];
         }
@@ -388,11 +441,34 @@ class OrderServiceController
             <meta charset="UTF-8">
             <title>Ordem de Serviço</title>
             <style>
+                .footer table,
+                .footer td {
+                    border: none !important;
+                }
+                .footer {
+                    position: fixed;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    height: 80px;
+                    font-size: 10px;
+                    background: #fff;
+                }
+
+                .footer-fixed {
+                    position: fixed;
+                    bottom: 0;
+                    left: 0;
+                    right: 0;
+                    padding-bottom: 20px;
+                }
+
                 body {
                     font-family: Calibri, sans-serif;
                     font-size: 12px;
                     padding: 15px;
                     color: #000;
+                    padding-bottom: 100px; /* deixa espaço pro rodapé */
                 }
                 table {
                     width: 100%;
@@ -487,11 +563,29 @@ class OrderServiceController
 
         <p><b>Observações:</b><br><?= nl2br($order['observacao'] ?: 'Nenhuma observação.') ?></p>
 
-        <div class="rodape">
-            Bione Alugueis e Servicos de Informatica LTDA / CNPJ: 11.204.447/0001-07<br>
-            Rua Luiza Maria da Conceicao, 187, Renascer - Cabedelo – PB<br>
-            FONE: (83) 98871-9620
+        <div class="footer">
+            <table width="100%" style="font-size: 10px;border: none">
+                <tr>
+                    <td style="text-align: center;">
+                        Bione Alugueis e Servicos de Informatica LTDA / CNPJ: 11.204.447/0001-07<br>
+                        Rua Luiza Maria da Conceicao, 187, Renascer - Cabedelo – PB<br>
+                        FONE: (83) 98871-9620
+                    </td>
+
+                    <?php if ($qrcodeBase64): ?>
+                        <td style="text-align: right; vertical-align: middle; width: 110px;">
+                            <div style="position: relative; display: inline-block; width: 100px; height: 100px;">
+                                <img src="<?= $qrcodeBase64 ?>" style="width: 100px; height: 100px;">
+                                <img src="https://bionetecnologia.com.br/logo-selo.png"
+                                     style="position: absolute; top: 30%; left: 47%; width: 25px; height: 25px; transform: translate(-50%, -50%);">
+                            </div>
+                        </td>
+                    <?php endif; ?>
+                </tr>
+            </table>
         </div>
+
+
         </body>
         </html>
         <?php
@@ -499,6 +593,7 @@ class OrderServiceController
         $html = ob_get_clean();
 
         $dompdf = new Dompdf((new Options())->set('isRemoteEnabled', true));
+        $dompdf->set_option('isHtml5ParserEnabled', true); // se ainda não estiver
         $dompdf->loadHtml($html);
         $dompdf->setPaper([0, 0, 595.28, 841.89]); // A4
         $dompdf->render();
@@ -671,6 +766,7 @@ class OrderServiceController
             Rua Luiza Maria da Conceicao, 187, Renascer - Cabedelo – PB<br>
             FONE: (83) 98871-9620
         </div>
+
         </body>
         </html>
         <?php

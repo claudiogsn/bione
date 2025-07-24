@@ -269,6 +269,14 @@ if (isset($data['method']) && isset($data['data'])) {
                     throw new Exception("Campo obrigatório: evento_id");
                 }
                 break;
+
+            case 'generateQrBase64':
+                if (isset($requestData['url'])) {
+                    $response = OrderServiceController::generateQrBase64($requestData['url']);
+                } else {
+                    throw new Exception("Campo obrigatório: url");
+                }
+                break;
             case 'listOrdersByPeriodo':
                 $response = OrderServiceController::listOrdersByPeriodo($requestData);
                 break;

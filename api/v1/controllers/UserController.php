@@ -39,7 +39,7 @@ class UserController
         SELECT sessionid
         FROM system_access_log
         WHERE login = :login
-        AND logout_time is null
+        AND logout_time = '0000-00-00 00:00:00'
         ORDER BY login_time DESC
         LIMIT 1
     ");

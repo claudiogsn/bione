@@ -50,74 +50,6 @@ class MaterialController
         }
     }
 
-    public static function addPatrimonio($materialId, $data)
-    {
-        global $pdo;
-
-        try {
-            $stmt = $pdo->prepare("INSERT INTO material_patrimonio 
-            (material_id, fabricante_id, modelo, numero_serie, patrimonio, status, custo_material, custo_locacao, sublocado, fornecedor_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-            $stmt->execute([
-                $materialId,
-                $data['fabricante_id'] ?? null,
-                $data['modelo'] ?? null,
-                $data['numero_serie'] ?? null,
-                $data['patrimonio'] ?? null,
-                $data['status'] ?? null,
-                $data['custo_material'] ?? null,
-                $data['custo_locacao'] ?? null,
-                $data['sublocado'] ?? null,
-                $data['fornecedor_id'] ?? null
-            ]);
-
-            return ['success' => true, 'message' => 'Patrimônio adicionado com sucesso', 'patrimonio_id' => $pdo->lastInsertId()];
-        } catch (PDOException $e) {
-            // Erro de chave duplicada ou outro
-            return ['success' => false, 'message' => 'Erro ao adicionar patrimônio: ' . $e->getMessage()];
-        }
-    }
-
-    public static function listPatrimoniosAgrupadosPorModelo($materialId)
-    {
-        global $pdo;
-
-        $stmt = $pdo->prepare("
-        SELECT 
-            mp.modelo,
-            f.nome AS fabricante_nome,
-            COUNT(*) AS total,
-            SUM(mp.custo_material) AS custo_total,
-            SUM(mp.custo_locacao) AS locacao_total
-        FROM material_patrimonio mp
-        LEFT JOIN fabricante f ON f.id = mp.fabricante_id
-        WHERE mp.material_id = :material_id
-        GROUP BY mp.modelo, f.nome
-        ORDER BY mp.modelo ASC");
-
-        $stmt->execute([':material_id' => $materialId]);
-
-        return ['success' => true, 'agrupado' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
-    }
-
-    public static function listPatrimoniosByMaterial($materialId)
-    {
-        global $pdo;
-
-        $stmt = $pdo->prepare("SELECT 
-            mp.*, 
-            f.nome AS fabricante_nome 
-        FROM material_patrimonio mp
-        LEFT JOIN fabricante f ON f.id = mp.fabricante_id
-        WHERE mp.material_id = :material_id
-        ORDER BY mp.modelo ASC, mp.patrimonio ASC");
-
-        $stmt->execute([':material_id' => $materialId]);
-
-        return ['success' => true, 'patrimonios' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
-    }
-
     public static function updateMaterial($id, $data)
     {
         global $pdo;
@@ -190,6 +122,186 @@ class MaterialController
         }
     }
 
+    public static function listMaterials($filters = [])
+    {
+        global $pdo;
+
+        $where = [];
+        $params = [];
+
+        if (!empty($filters['categoria_id'])) {
+            $where[] = "m.categoria_id = :categoria_id";
+            $params[':categoria_id'] = $filters['categoria_id'];
+        }
+
+        $whereClause = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
+
+        $sql = "
+            SELECT 
+                m.*,
+                c.nome AS categoria_nome,
+                (SELECT COUNT(*) FROM material_patrimonio mp WHERE mp.material_id = m.id) AS total_patrimonios
+            FROM material m
+            LEFT JOIN categoria c ON c.id = m.categoria_id
+            $whereClause
+            ORDER BY m.nome ASC";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+
+        $materials = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return ['success' => true, 'materials' => $materials];
+    }
+
+    public static function addPatrimonio($materialId, $data)
+    {
+        global $pdo;
+
+        try {
+            $stmt = $pdo->prepare("INSERT INTO material_patrimonio 
+            (material_id, fabricante_id, modelo, numero_serie, patrimonio, status, custo_material, custo_locacao, sublocado, fornecedor_id) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
+            $stmt->execute([
+                $materialId,
+                $data['fabricante_id'] ?? null,
+                $data['modelo'] ?? null,
+                $data['numero_serie'] ?? null,
+                $data['patrimonio'] ?? null,
+                $data['status'] ?? null,
+                $data['custo_material'] ?? null,
+                $data['custo_locacao'] ?? null,
+                $data['sublocado'] ?? null,
+                $data['fornecedor_id'] ?? null
+            ]);
+
+            return ['success' => true, 'message' => 'Patrimônio adicionado com sucesso', 'patrimonio_id' => $pdo->lastInsertId()];
+        } catch (PDOException $e) {
+            // Erro de chave duplicada ou outro
+            return ['success' => false, 'message' => 'Erro ao adicionar patrimônio: ' . $e->getMessage()];
+        }
+    }
+
+    public static function listPatrimoniosAgrupadosPorModelo($materialId)
+    {
+        global $pdo;
+
+        $stmt = $pdo->prepare("
+        SELECT 
+            mp.modelo,
+            f.nome AS fabricante_nome,
+            COUNT(*) AS total,
+            SUM(mp.custo_material) AS custo_total,
+            SUM(mp.custo_locacao) AS locacao_total
+        FROM material_patrimonio mp
+        LEFT JOIN fabricante f ON f.id = mp.fabricante_id
+        WHERE mp.material_id = :material_id
+        GROUP BY mp.modelo, f.nome
+        ORDER BY mp.modelo ASC");
+
+        $stmt->execute([':material_id' => $materialId]);
+
+        return ['success' => true, 'agrupado' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+    }
+
+    public static function listPatrimoniosByMaterial($materialId)
+    {
+        global $pdo;
+
+        $stmt = $pdo->prepare("SELECT 
+            mp.*, 
+            f.nome AS fabricante_nome 
+        FROM material_patrimonio mp
+        LEFT JOIN fabricante f ON f.id = mp.fabricante_id
+        WHERE mp.material_id = :material_id
+        ORDER BY mp.modelo ASC, mp.patrimonio ASC");
+
+        $stmt->execute([':material_id' => $materialId]);
+
+        return ['success' => true, 'patrimonios' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+    }
+
+    public static function listPatrimonios()
+    {
+        global $pdo;
+
+        $sql = "
+        SELECT 
+            mp.id,
+            mp.material_id,
+            m.nome AS nome_material,
+            mp.fabricante_id,
+            f.nome AS nome_fabricante,
+            mp.modelo,
+            mp.numero_serie,
+            mp.patrimonio,
+            mp.status,
+            mp.custo_material,
+            mp.custo_locacao,
+            mp.sublocado,
+            mp.fornecedor_id,
+            mp.created_at,
+            mp.updated_at
+        FROM material_patrimonio mp
+        LEFT JOIN material m ON mp.material_id = m.id
+        LEFT JOIN fabricante f ON mp.fabricante_id = f.id
+        ORDER BY mp.id DESC
+    ";
+
+        try {
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute();
+            $patrimonios = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+            return [
+                'success' => true,
+                'patrimonios' => $patrimonios
+            ];
+        } catch (PDOException $e) {
+            return [
+                'success' => false,
+                'message' => 'Erro ao buscar patrimônios: ' . $e->getMessage()
+            ];
+        }
+    }
+
+    public static function getPatrimonioById($id)
+    {
+        global $pdo;
+
+        try {
+            $stmt = $pdo->prepare("SELECT * FROM material_patrimonio WHERE id = ?");
+            $stmt->execute([$id]);
+            $patrimonio = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($patrimonio) {
+                return ['success' => true, 'patrimonio' => $patrimonio];
+            } else {
+                return ['success' => false, 'message' => 'material_patrimonio não encontrada'];
+            }
+        } catch (PDOException $e) {
+            return ['success' => false, 'message' => 'Erro ao buscar categoria: ' . $e->getMessage()];
+        }
+    }
+
+    public static function verificaPatrimonioDisponivel($patrimonio)
+    {
+        global $pdo;
+
+        $sql = "SELECT COUNT(*) FROM material_patrimonio WHERE patrimonio = :patrimonio";
+        $params = [':patrimonio' => $patrimonio];
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($params);
+        $count = $stmt->fetchColumn();
+
+        return [
+            'success' => true,
+            'disponivel' => $count == 0
+        ];
+    }
+
     public static function updatePatrimonio($id, $data)
     {
         global $pdo;
@@ -232,38 +344,6 @@ class MaterialController
         } catch (PDOException $e) {
             return ['success' => false, 'message' => 'Erro ao excluir patrimônio: ' . $e->getMessage()];
         }
-    }
-
-    public static function listMaterials($filters = [])
-    {
-        global $pdo;
-
-        $where = [];
-        $params = [];
-
-        if (!empty($filters['categoria_id'])) {
-            $where[] = "m.categoria_id = :categoria_id";
-            $params[':categoria_id'] = $filters['categoria_id'];
-        }
-
-        $whereClause = count($where) ? 'WHERE ' . implode(' AND ', $where) : '';
-
-        $sql = "
-            SELECT 
-                m.*,
-                c.nome AS categoria_nome,
-                (SELECT COUNT(*) FROM material_patrimonio mp WHERE mp.material_id = m.id) AS total_patrimonios
-            FROM material m
-            LEFT JOIN categoria c ON c.id = m.categoria_id
-            $whereClause
-            ORDER BY m.nome ASC";
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-
-        $materials = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-        return ['success' => true, 'materials' => $materials];
     }
 
     public static function listFabricantes()
@@ -443,7 +523,7 @@ class MaterialController
 
         return ['success' => true, 'categorias' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
-    // Cria novo serviço
+
     public static function createServico($data)
     {
         global $pdo;
@@ -465,7 +545,7 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao criar serviço: ' . $e->getMessage()];
         }
     }
-// Atualiza um serviço existente
+
     public static function updateServico($id, $data)
     {
         global $pdo;
@@ -493,7 +573,7 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao atualizar serviço: ' . $e->getMessage()];
         }
     }
-// Remove um serviço
+
     public static function deleteServico($id)
     {
         global $pdo;
@@ -509,7 +589,7 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao excluir serviço: ' . $e->getMessage()];
         }
     }
-// Busca serviço por ID
+
     public static function getServicoById($id)
     {
         global $pdo;
@@ -526,7 +606,7 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao buscar serviço: ' . $e->getMessage()];
         }
     }
-// Lista serviços (pode aplicar filtros no futuro)
+    
     public static function listServicos($filters = [])
     {
         global $pdo;
@@ -546,67 +626,5 @@ class MaterialController
 
         return ['success' => true, 'servicos' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
     }
-    public static function listPatrimonios()
-    {
-        global $pdo;
-
-        $sql = "
-        SELECT 
-            mp.id,
-            mp.material_id,
-            m.nome AS nome_material,
-            mp.fabricante_id,
-            f.nome AS nome_fabricante,
-            mp.modelo,
-            mp.numero_serie,
-            mp.patrimonio,
-            mp.status,
-            mp.custo_material,
-            mp.custo_locacao,
-            mp.sublocado,
-            mp.fornecedor_id,
-            mp.created_at,
-            mp.updated_at
-        FROM material_patrimonio mp
-        LEFT JOIN material m ON mp.material_id = m.id
-        LEFT JOIN fabricante f ON mp.fabricante_id = f.id
-        ORDER BY mp.id DESC
-    ";
-
-        try {
-            $stmt = $pdo->prepare($sql);
-            $stmt->execute();
-            $patrimonios = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-            return [
-                'success' => true,
-                'patrimonios' => $patrimonios
-            ];
-        } catch (PDOException $e) {
-            return [
-                'success' => false,
-                'message' => 'Erro ao buscar patrimônios: ' . $e->getMessage()
-            ];
-        }
-    }
-
-    public static function verificaPatrimonioDisponivel($patrimonio)
-    {
-        global $pdo;
-
-        $sql = "SELECT COUNT(*) FROM material_patrimonio WHERE patrimonio = :patrimonio";
-        $params = [':patrimonio' => $patrimonio];
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute($params);
-        $count = $stmt->fetchColumn();
-
-        return [
-            'success' => true,
-            'disponivel' => $count == 0
-        ];
-    }
-
-
 
 }

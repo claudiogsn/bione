@@ -215,6 +215,13 @@ if (isset($data['method']) && isset($data['data'])) {
                     throw new Exception("Campo obrigatório: id.");
                 }
                 break;
+            case 'getPatrimonioById':
+                if (isset($requestData['id'])) {
+                    $response = MaterialController::getPatrimonioById($requestData['id']);
+                } else {
+                    throw new Exception("Campo obrigatório: id.");
+                }
+                break;
 
             case 'listServicos':
                 $response = MaterialController::listServicos($requestData ?? []);

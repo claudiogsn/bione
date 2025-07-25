@@ -606,7 +606,7 @@ class MaterialController
             return ['success' => false, 'message' => 'Erro ao buscar serviço: ' . $e->getMessage()];
         }
     }
-    
+
     public static function listServicos($filters = [])
     {
         global $pdo;

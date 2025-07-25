@@ -7,6 +7,7 @@ require_once 'controllers/EventController.php';
 require_once 'controllers/MaterialController.php';
 require_once 'controllers/UserController.php';
 require_once 'controllers/FaturaController.php';
+require_once 'controllers/MenuMobileController.php';
 
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
@@ -18,7 +19,24 @@ if (isset($data['method']) && isset($data['data'])) {
         $requestToken = $data['token'];
     }
 
-    $noAuthMethods = ['validateCPF', 'validateCNPJ','getOrderDetailsByControle','getOrderDetailsByDocumento'];
+    $noAuthMethods = [
+        'validateCPF',
+        'validateCNPJ',
+        'getOrderDetailsByControle',
+        'getOrderDetailsByDocumento',
+        'listMenus',
+        'createMenu',
+        'updateMenu',
+        'deleteMenu',
+        'getMenuById',
+        'toggleMenuStatus',
+        'createOrUpdateMenuPermission',
+        'getPermissionsByMenu',
+        'deleteMenuPermission',
+        'getUserDetails',
+        'getMenuMobile'
+    ];
+
 
     if (!in_array($method, $noAuthMethods)) {
         if (!isset($requestToken)) {
@@ -33,6 +51,29 @@ if (isset($data['method']) && isset($data['data'])) {
 
     try {
         switch ($method) {
+            // Métodos para UserController
+            case 'getUserDetails':
+                if (isset($requestData['user'])) {
+                    $response = UserController::getUserDetails($requestData['user']);
+                } else {
+                    http_response_code(400);
+                    $response = ['error' => 'Parâmetro user ausente'];
+                }
+                break;
+
+            case 'getUsers':
+                $response = UserController::getUsers();
+                break;
+
+            case 'getMenuMobile':
+                if (isset($requestData['user_id'])) {
+                    $response = UserController::getMenuMobile($requestData['user_id']);
+                } else {
+                    http_response_code(400);
+                    $response = ['error' => 'Parâmetro user ausente'];
+                }
+                break;
+
             case 'getUserRoles':
                 if (isset($requestData['user'])) {
                     $response = UserController::getUserRoles($requestData['user']);
@@ -410,6 +451,60 @@ if (isset($data['method']) && isset($data['data'])) {
                     $response = FaturaController::generateFaturaPdf($requestData['documento']);
                 } else {
                     throw new Exception("Campo obrigatório: documento_os");
+                }
+                break;
+
+            case 'listMenus':
+                $response = MenuMobileController::listMenus();
+                break;
+
+            case 'createMenu':
+                $response = MenuMobileController::createMenu($requestData);
+                break;
+
+            case 'updateMenu':
+                $response = MenuMobileController::updateMenu($requestData);
+                break;
+
+            case 'deleteMenu':
+                if (isset($requestData['id'])) {
+                    $response = MenuMobileController::deleteMenu($requestData['id']);
+                } else {
+                    $response = ['success' => false, 'message' => 'ID não informado'];
+                }
+                break;
+
+            case 'getMenuById':
+                if (isset($requestData['id'])) {
+                    $response = MenuMobileController::getMenuById($requestData['id']);
+                } else {
+                    $response = ['success' => false, 'message' => 'ID não informado'];
+                }
+                break;
+            case 'toggleMenuStatus':
+                if (isset($requestData['id'])) {
+                    $response = MenuMobileController::toggleStatus($requestData['id']);
+                } else {
+                    $response = ["success" => false, "message" => "ID não informado."];
+                }
+                break;
+            case 'createOrUpdateMenuPermission':
+                $response = MenuMobileController::createOrUpdateMenuPermission($requestData);
+                break;
+
+            case 'getPermissionsByMenu':
+                if (isset($requestData['menu_id'])) {
+                    $response = MenuMobileController::getPermissionsByMenu($requestData['menu_id']);
+                } else {
+                    $response = ["success" => false, "message" => "ID do menu não informado."];
+                }
+                break;
+
+            case 'deleteMenuPermission':
+                if (isset($requestData['id'])) {
+                    $response = MenuMobileController::deleteMenuPermission($requestData['id']);
+                } else {
+                    $response = ["success" => false, "message" => "ID do menu não informado."];
                 }
                 break;
 

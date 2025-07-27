@@ -159,9 +159,22 @@ class MaterialController
         global $pdo;
 
         try {
-            $stmt = $pdo->prepare("INSERT INTO material_patrimonio 
-            (material_id, fabricante_id, modelo, numero_serie, patrimonio, status, custo_material, custo_locacao, sublocado, fornecedor_id) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt = $pdo->prepare("
+            INSERT INTO material_patrimonio 
+            (material_id, fabricante_id, modelo, numero_serie, patrimonio, status, custo_material, custo_locacao, sublocado, fornecedor_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                material_id = VALUES(material_id),
+                fabricante_id = VALUES(fabricante_id),
+                modelo = VALUES(modelo),
+                numero_serie = VALUES(numero_serie),
+                status = VALUES(status),
+                custo_material = VALUES(custo_material),
+                custo_locacao = VALUES(custo_locacao),
+                sublocado = VALUES(sublocado),
+                fornecedor_id = VALUES(fornecedor_id),
+                updated_at = CURRENT_TIMESTAMP()
+        ");
 
             $stmt->execute([
                 $materialId,
@@ -176,10 +189,22 @@ class MaterialController
                 $data['fornecedor_id'] ?? null
             ]);
 
-            return ['success' => true, 'message' => 'Patrimônio adicionado com sucesso', 'patrimonio_id' => $pdo->lastInsertId()];
+            // Buscar ID existente ou novo
+            $stmtSelect = $pdo->prepare("SELECT id FROM material_patrimonio WHERE patrimonio = ?");
+            $stmtSelect->execute([$data['patrimonio']]);
+            $id = $stmtSelect->fetchColumn();
+
+            return [
+                'success' => true,
+                'message' => 'Patrimônio inserido ou atualizado com sucesso',
+                'patrimonio_id' => $id
+            ];
+
         } catch (PDOException $e) {
-            // Erro de chave duplicada ou outro
-            return ['success' => false, 'message' => 'Erro ao adicionar patrimônio: ' . $e->getMessage()];
+            return [
+                'success' => false,
+                'message' => 'Erro ao salvar patrimônio: ' . $e->getMessage()
+            ];
         }
     }
 

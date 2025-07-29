@@ -542,26 +542,30 @@ class OrderServiceController
                 <tr><th>Descrição</th><th>Qtd</th><th>Período</th></tr>
                 </thead>
                 <tbody>
-                <?php
-                $total = 0;
-                foreach ($itens as $item):
-                    $isSublocado = isset($item['sublocado']) && $item['sublocado'] == 1;
-                    ?>
+                <?php foreach ($itens as $item): ?>
+                    <?php $isSublocado = isset($item['sublocado']) && $item['sublocado'] == 1; ?>
                     <tr>
-                        <td>
+                        <td <?= $isSublocado ? 'style="color: red; font-weight: bold;"' : '' ?>>
                             <?= $item['descricao'] ?>
                             <?php if ($isSublocado): ?>
-                                <span style="color: red; font-weight: bold;"> - SUBLOCADO</span>
+                                - SUBLOCADO
                             <?php endif; ?>
-                            <br> <small><?= $item['observacao'] ?></small>
+                            <br><small><?= $item['observacao'] ?></small>
                         </td>
-                        <td><?= $item['quantidade'] ?></td>
-                        <td><?= date('d/m', strtotime($item['data_inicial'])) ?> - <?= date('d/m', strtotime($item['data_final'])) ?></td>
+                        <td <?= $isSublocado ? 'style="color: red; font-weight: bold;"' : '' ?>>
+                            <?= $item['quantidade'] ?>
+                        </td>
+                        <td <?= $isSublocado ? 'style="color: red; font-weight: bold;"' : '' ?>>
+                            <?= date('d/m', strtotime($item['data_inicial'])) ?>
+                            -
+                            <?= date('d/m', strtotime($item['data_final'])) ?>
+                        </td>
                     </tr>
                 <?php endforeach; ?>
                 </tbody>
             </table>
         <?php endif; ?>
+
 
 
         <?php if (count($services)): ?>

@@ -13,6 +13,17 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const largura = window.innerWidth;
+            const altura = window.innerHeight;
+
+            if (largura <= 1366 && altura <= 768) {
+                document.body.style.zoom = "80%";
+            }
+        });
+    </script>
+
     <style>
         @media (max-width: 768px) {
             body, .form-control, .modal-content, table, th, td, button {

@@ -8,6 +8,17 @@
     <link href="bsb/css/style.css" rel="stylesheet">
     <link href="bsb/plugins/sweetalert/sweetalert.css" rel="stylesheet">
     <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const largura = window.innerWidth;
+            const altura = window.innerHeight;
+
+            if (largura <= 1366 && altura <= 768) {
+                document.body.style.zoom = "80%";
+            }
+        });
+    </script>
+
 </head>
 <body class="theme-blue">
 <div class="container-fluid">

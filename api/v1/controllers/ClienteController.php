@@ -5,30 +5,52 @@ class ClienteController {
     
     // Função para criar um novo cliente
     public static function createCliente($data) {
-        global $pdo; 
+        global $pdo;
 
-        // Extrai os dados da requisição
-        $nome = $data['nome'];
-        $telefone = $data['telefone'];
-        $email = $data['email'];
-        $cpf_cnpj = $data['cpf_cnpj'];
-        $status = $data['status'];
-        $endereco = $data['endereco'];
-        $bairro = $data['bairro'];
-        $cidade = $data['cidade'];
-        $estado = $data['estado'];
-        $cep = $data['cep'];
+        // Campos obrigatórios
+        $nome = $data['nome'] ?? null;
+        $telefone = $data['telefone'] ?? null;
 
-        // Prepara e executa a consulta SQL para inserir um novo cliente no banco de dados
-        $stmt = $pdo->prepare("INSERT INTO cliente (nome, telefone, email, cpf_cnpj, status, endereco, bairro, cidade, estado, cep) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->execute([$nome, $telefone, $email, $cpf_cnpj, $status, $endereco, $bairro, $cidade, $estado, $cep]);
+        // Validação mínima
+        if (!$nome) {
+            return ['success' => false, 'message' => 'O campo nome é obrigatório.'];
+        }
+
+        // Campos opcionais
+        $email    = $data['email']    ?? null;
+        $cpf_cnpj = $data['cpf_cnpj'] ?? null;
+        $status   = $data['status']   ?? null;
+        $endereco = $data['endereco'] ?? null;
+        $bairro   = $data['bairro']   ?? null;
+        $cidade   = $data['cidade']   ?? null;
+        $estado   = $data['estado']   ?? null;
+        $cep      = $data['cep']      ?? null;
+
+        // Prepara a query e os valores dinamicamente
+        $campos = ['nome', 'telefone'];
+        $placeholders = ['?', '?'];
+        $valores = [$nome, $telefone];
+
+        $dadosOpcionais = compact('email', 'cpf_cnpj', 'status', 'endereco', 'bairro', 'cidade', 'estado', 'cep');
+        foreach ($dadosOpcionais as $campo => $valor) {
+            if (!is_null($valor)) {
+                $campos[] = $campo;
+                $placeholders[] = '?';
+                $valores[] = $valor;
+            }
+        }
+
+        $sql = "INSERT INTO cliente (" . implode(', ', $campos) . ") VALUES (" . implode(', ', $placeholders) . ")";
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute($valores);
 
         if ($stmt->rowCount() > 0) {
-            return array('success' => true, 'message' => 'Cliente criado com sucesso','client_id' => $pdo->lastInsertId());
+            return ['success' => true, 'message' => 'Cliente criado com sucesso', 'client_id' => $pdo->lastInsertId()];
         } else {
-            return array('success' => false, 'message' => 'Falha ao criar cliente');
+            return ['success' => false, 'message' => 'Falha ao criar cliente'];
         }
     }
+
 
     // Função para atualizar os detalhes de um cliente
     public static function updateCliente($id, $data) {

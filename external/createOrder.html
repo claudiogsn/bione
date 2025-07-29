@@ -17,6 +17,17 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const largura = window.innerWidth;
+            const altura = window.innerHeight;
+
+            if (largura <= 1366 && altura <= 768) {
+                document.body.style.zoom = "80%";
+            }
+        });
+    </script>
+
 
 
 </head>
@@ -86,10 +97,10 @@
                 <tr>
                     <th style="display:none;">ID</th>
                     <th>Descrição</th>
-                    <th>Valor Unitário (R$)</th>
-                    <th>Quantidade</th>
-                    <th>Data Início</th>
-                    <th>Data Fim</th>
+                    <th>Observação</th>
+                    <th>Valor</th>
+                    <th>Quant.</th>
+                    <th>Periodo</th>
                     <th style="display:none;">Dias Uso</th>
                     <th>Total (R$)</th>
                     <th>Ação</th>

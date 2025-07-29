@@ -40,7 +40,7 @@
                         <div class="row">
                             <div class="col-sm-4">
                                 <label for="cpf_cnpj">CPF/CNPJ</label>
-                                <input type="text" class="form-control" id="cpf_cnpj" name="cpf_cnpj" required>
+                                <input type="text" class="form-control" id="cpf_cnpj" name="cpf_cnpj">
                             </div>
                             <div class="col-sm-4">
                                 <label for="telefone">Telefone</label>
@@ -272,34 +272,35 @@
             const cidade = cidadeInput.value.trim();
             const estado = estadoInput.value.trim();
 
-            // 🔍 Validação de campos obrigatórios
-            if (!nome || !doc || !telefone || !email || !cep || !endereco || !numero || !bairro || !cidade || !estado) {
-                Swal.fire('Atenção', 'Preencha todos os campos obrigatórios.', 'warning');
+            if (!nome || !telefone) {
+                Swal.fire('Atenção', 'Os campos Nome e Telefone são obrigatórios.', 'warning');
                 return;
             }
 
+            const data = {
+                nome,
+                telefone,
+                status: 'ativo'
+            };
+
+            if (doc) data.cpf_cnpj = doc;
+            if (email) data.email = email;
+            if (cep) data.cep = cep;
+            if (endereco || numero) data.endereco = `${endereco}${numero ? ', ' + numero : ''}`;
+            if (bairro) data.bairro = bairro;
+            if (cidade) data.cidade = cidade;
+            if (estado) data.estado = estado;
+
             const body = {
-                token: token,
+                token,
                 method: 'createCliente',
-                data: {
-                    nome,
-                    telefone,
-                    email,
-                    cpf_cnpj: doc,
-                    status: 'ativo',
-                    endereco: `${endereco}, ${numero}`,
-                    bairro,
-                    cidade,
-                    estado,
-                    cep
-                }
+                data
             };
 
             try {
                 const res = await axios.post(`${baseUrl}/api/v1/index.php`, body);
                 if (res.data.success) {
                     Swal.fire('Sucesso', 'Cliente cadastrado com sucesso!', 'success');
-                    // Limpa manualmente os campos mascarados
                     cpfCnpjInput.value = '';
                     telefoneInput.value = '';
                     cepInput.value = '';

@@ -662,6 +662,7 @@ class BootstrapFormBuilder implements AdiantiFormInterface
             $csrf_token = new THidden('csrf_token');
             $this->addFields([$csrf_token]);
             $csrf_token->setValue(TSession::getValue('csrf_token_'.$this->name));
+            var_dump($csrf_token);
             $this->decorated->silentField('csrf_token');
         }
         

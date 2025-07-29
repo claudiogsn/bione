@@ -149,6 +149,20 @@
         listarEventos();
     });
 
+    $(document).on('click', '.btn-ver-detalhes', function () {
+        try {
+            const eventoBase64 = $(this).data('evento');
+            const eventoJson = atob(eventoBase64);
+            const evento = JSON.parse(eventoJson);
+            abrirModalDetalhes(evento);
+        } catch (e) {
+            Swal.fire('Erro', 'Falha ao processar os dados do evento.', 'error');
+            console.error(e);
+        }
+    });
+
+
+
     async function listarEventos() {
         const data_inicio = $('#filtroDataInicio').val();
         const data_fim = $('#filtroDataFim').val();
@@ -184,7 +198,7 @@
        </span>`
                     : (e.local ?? '-');
 
-
+                const eventoData = btoa(JSON.stringify(e));
                 const row = `
                     <tr>
                       <td>${e.nome}</td>
@@ -195,7 +209,7 @@
                         ${e.place_url ? `<span data-toggle="popover" data-trigger="hover" data-placement="top" data-html="true" title="Google Maps" data-content="<a href='${e.place_url}' target='_blank' class='btn btn-sm btn-primary'>Abrir Mapa</a>">${e.local}</span>` : (e.local ?? '-')}
                       </td>
                       <td>
-                        <button class="btn btn-sm btn-info" onclick='abrirModalDetalhes(${JSON.stringify(e)})'>Ver Detalhes</button>
+                        <button class="btn btn-sm btn-info btn-ver-detalhes" data-evento="${eventoData}">Ver Detalhes</button>
                       </td>
                     </tr>
                     `;

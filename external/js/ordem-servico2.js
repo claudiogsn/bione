@@ -66,8 +66,10 @@ function salvarOrdemServico() {
             data_inicial: row.find('.data_inicio').val(),
             data_final: row.find('.data_fim').val(),
             status: 'ativo',
-            quantidade: parseInt(row.find('.quantidade').val()) || 1
+            quantidade: parseInt(row.find('.quantidade').val()) || 1,
+            observacao: row.find('.observacao_item').val()?.trim() || null
         });
+
     });
 
     $('#tabela-servicos tbody tr').each(function () {
@@ -299,7 +301,7 @@ function abrirModalItem() {
 
 function adicionarItemSelecionadoComModelo(id, nome, valor_locacao) {
     const modelo = $(`#select-modelo-${id}`).val();
-    const label = modelo ? `${nome}<br><small>${modelo}</small>` : nome;
+    const label = modelo ? `${nome}&nbsp;&rarr;&nbsp;<br><small>${modelo}</small>` : nome;
 
     adicionarItem(id, 1, valor_locacao, modelo, label); // função ajustada abaixo
     $('#modalItens').modal('hide');
@@ -458,40 +460,40 @@ function adicionarItem(id, qtd = 1, valor_locacao, modelo = '', nomeExibicao = '
     const dataInicio = formatDateOnly(window.DATA_INICIO_EVENTO);
     const dataFim = formatDateOnly(window.DATA_FIM_EVENTO);
 
-
-
-
     $('#tabela-itens tbody').append(`
         <tr id="${rowId}">
             <td style="display:none;">
                 <input type="hidden" class="material_id" value="${id}">
                 <input type="hidden" class="modelo" value="${modelo}">
             </td>
-            <td>${nomeExibicao || 'Item'}</td>
-            <td>
-                <input type="number" step="0.01" class="form-control valor_unitario valor_reais" value="${valor_locacao}" onchange="recalcularItem('${rowId}')">
+            <td>${nomeExibicao}</td>
+            <td><input type="text" class="form-control observacao_item" placeholder="Observação..."></td>
+            <td style="width: 100px;">
+                <input type="number" class="form-control valor_unitario valor_reais" value="${valor_locacao}" onchange="recalcularItem('${rowId}')">
             </td>
-            <td>
+            <td style="width: 80px;">
                 <input type="number" class="form-control quantidade" value="${qtd}" onchange="recalcularItem('${rowId}')">
             </td>
-            <td>
-                <input type="date" class="form-control data_inicio" value="${dataInicio}" onchange="recalcularItem('${rowId}')">
-            </td>
-            <td>
-                <input type="date" class="form-control data_fim" value="${dataFim}" onchange="recalcularItem('${rowId}')">
+            <td style="width: 120px;">
+                <div class="input-group">
+                    <input type="date" class="form-control data_inicio" value="${dataInicio}" onchange="recalcularItem('${rowId}')">
+                    <span class="input-group-addon">→</span>
+                    <input type="date" class="form-control data_fim" value="${dataFim}" onchange="recalcularItem('${rowId}')">
+                </div>
             </td>
             <td style="display:none;">
                 <input type="number" class="form-control dias_uso" value="1" readonly>
             </td>
-            <td>
-                <span class="subtotal">R$ 0,00</span>
-            </td>
+            <td><span class="subtotal">R$ 0,00</span></td>
             <td><a href="javascript:void(0)" onclick="$(this).closest('tr').remove(); atualizarTotaisOS();"><i class="fa fa-trash red"></i></a></td>
         </tr>
     `);
 
     recalcularItem(rowId);
 }
+
+
+
 $(document).on('click', '.remover-linha', function () {
     $(this).closest('tr').remove();
     atualizarTotal();
@@ -573,12 +575,13 @@ $(document).on('input', '.quantidade, .valor_unitario, .valor_servico, .valor_pa
 // Renderiza linha de item
 function preencherLinhaItem(row, item) {
     const rowId = `item-${item.material_id}-${Date.now()}`;
-    const dataInicio = window.DATA_INICIO_EVENTO?.split('T')[0] || new Date().toISOString().split('T')[0];
-    const dataFim = window.DATA_FIM_EVENTO?.split('T')[0] || dataInicio;
+    const dataInicio = formatDateOnly(item.data_inicial || window.DATA_INICIO_EVENTO);
+    const dataFim = formatDateOnly(item.data_final || window.DATA_FIM_EVENTO);
     const modelo = item.modelo || '';
     const nomeExibicao = item.nome || `Item ${item.material_id}`;
-    const valorUnit = parseFloat(item.valor_unitario) || 0;
+    const valorUnit = parseFloat(item.valor) || 0;
     const quantidade = parseInt(item.quantidade) || 1;
+    const observacao = item.observacao || '';
 
     row.attr('id', rowId).html(`
         <td style="display:none;">
@@ -586,10 +589,16 @@ function preencherLinhaItem(row, item) {
             <input type="hidden" class="modelo" value="${modelo}">
         </td>
         <td>${nomeExibicao}</td>
-        <td><input type="number" class="form-control valor_unitario valor_reais" value="${valorUnit}" onchange="recalcularItem('${rowId}')"></td>
-        <td><input type="number" class="form-control quantidade" value="${quantidade}" onchange="recalcularItem('${rowId}')"></td>
-        <input type="date" class="form-control data_inicio" value="${dataInicio}" onchange="recalcularItem('${rowId}')">
-        <input type="date" class="form-control data_fim" value="${dataFim}" onchange="recalcularItem('${rowId}')">
+        <td><input type="text" class="form-control observacao_item" value="${observacao}" placeholder="Observação..."></td>
+        <td style="width: 80px;"><input type="number" class="form-control valor_unitario valor_reais" value="${valorUnit}" onchange="recalcularItem('${rowId}')"></td>
+        <td style="width: 60px;"><input type="number" class="form-control quantidade" value="${quantidade}" onchange="recalcularItem('${rowId}')"></td>
+        <td style="width: 180px;">
+            <div class="input-group">
+                <input type="date" class="form-control data_inicio" value="${dataInicio}" onchange="recalcularItem('${rowId}')">
+                <span class="input-group-addon">→</span>
+                <input type="date" class="form-control data_fim" value="${dataFim}" onchange="recalcularItem('${rowId}')">
+            </div>
+        </td>
         <td style="display:none;"><input type="number" class="form-control dias_uso" value="1" readonly></td>
         <td><span class="subtotal">R$ 0,00</span></td>
         <td><a href="javascript:void(0)" onclick="$(this).closest('tr').remove(); atualizarTotaisOS();"><i class="fa fa-trash red red"></i></a></td>
@@ -597,6 +606,8 @@ function preencherLinhaItem(row, item) {
 
     recalcularItem(rowId);
 }
+
+
 
 // Renderiza linha de serviço
 function preencherLinhaServico(row, servico) {

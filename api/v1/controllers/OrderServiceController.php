@@ -137,8 +137,9 @@ class OrderServiceController
             foreach ($itens as $item) {
                 $stmt = $pdo->prepare("INSERT INTO order_itens (
                     evento_id, cliente_id, num_controle, material_id, descricao, valor, custo, dias_uso, 
-                    data_inicial, data_final, status, quantidade
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    data_inicial, data_final, status, quantidade, observacao
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+
 
                 $stmt->execute([
                     $order['evento_id'],
@@ -152,8 +153,10 @@ class OrderServiceController
                     $item['data_inicial'],
                     $item['data_final'],
                     $item['status'] ?? 'ativo',
-                    $item['quantidade'] ?? 1
+                    $item['quantidade'] ?? 1,
+                    $item['observacao'] ?? null
                 ]);
+
 
             }
 
@@ -536,7 +539,7 @@ class OrderServiceController
                 foreach ($itens as $item):
                     ?>
                     <tr>
-                        <td><?= $item['descricao'] ?></td>
+                        <td><?= $item['descricao'] ?> <br> <small><?= $item['observacao'] ?> </small></td>
                         <td><?= $item['quantidade'] ?></td>
                         <td><?= date('d/m', strtotime($item['data_inicial'])) ?> - <?= date('d/m', strtotime($item['data_final'])) ?></td>
                     </tr>

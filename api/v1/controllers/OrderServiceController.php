@@ -305,9 +305,17 @@ class OrderServiceController
         $stmtEvento->execute([$evento_id]);
         $details['evento'] = $stmtEvento->fetch(PDO::FETCH_ASSOC);
 
-        $stmtItens = $pdo->prepare("SELECT * FROM order_itens WHERE num_controle = ?");
+        $stmtItens = $pdo->prepare("
+            SELECT 
+                oi.*, 
+                m.sublocado 
+            FROM order_itens oi
+            LEFT JOIN material m ON oi.material_id = m.id
+            WHERE oi.num_controle = ?
+        ");
         $stmtItens->execute([$num_controle]);
         $details['itens'] = $stmtItens->fetchAll(PDO::FETCH_ASSOC);
+
 
         $stmtServicos = $pdo->prepare("
         SELECT 
@@ -537,9 +545,16 @@ class OrderServiceController
                 <?php
                 $total = 0;
                 foreach ($itens as $item):
+                    $isSublocado = isset($item['sublocado']) && $item['sublocado'] == 1;
                     ?>
                     <tr>
-                        <td><?= $item['descricao'] ?> <br> <small><?= $item['observacao'] ?> </small></td>
+                        <td>
+                            <?= $item['descricao'] ?>
+                            <?php if ($isSublocado): ?>
+                                <span style="color: red; font-weight: bold;"> - SUBLOCADO</span>
+                            <?php endif; ?>
+                            <br> <small><?= $item['observacao'] ?></small>
+                        </td>
                         <td><?= $item['quantidade'] ?></td>
                         <td><?= date('d/m', strtotime($item['data_inicial'])) ?> - <?= date('d/m', strtotime($item['data_final'])) ?></td>
                     </tr>
@@ -547,6 +562,7 @@ class OrderServiceController
                 </tbody>
             </table>
         <?php endif; ?>
+
 
         <?php if (count($services)): ?>
             <h3>Serviços</h3>

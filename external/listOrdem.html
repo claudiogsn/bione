@@ -172,8 +172,9 @@
     $(document).ready(() => {
         verificarPermissao();
         const hoje = new Date();
-        const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-        const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+
+        const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+        const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 2, 0);
 
 
         $('#dataInicio').val(primeiroDia.toISOString().split('T')[0]);

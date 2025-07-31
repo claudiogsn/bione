@@ -301,7 +301,7 @@ function abrirModalItem() {
 
 function adicionarItemSelecionadoComModelo(id, nome, valor_locacao) {
     const modelo = $(`#select-modelo-${id}`).val();
-    const label = modelo ? `${nome}&nbsp;&rarr;&nbsp;<br><small>${modelo}</small>` : nome;
+    const label = modelo ? `${nome} <br><small> ${modelo}</small>` : nome;
 
     adicionarItem(id, 1, valor_locacao, modelo, label); // função ajustada abaixo
     $('#modalItens').modal('hide');

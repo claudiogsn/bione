@@ -8,6 +8,7 @@ require_once 'controllers/MaterialController.php';
 require_once 'controllers/UserController.php';
 require_once 'controllers/FaturaController.php';
 require_once 'controllers/MenuMobileController.php';
+require_once 'controllers/PropostaController.php';
 
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
@@ -279,6 +280,10 @@ if (isset($data['method']) && isset($data['data'])) {
                 $response = OrderServiceController::createOrUpdateOrder($requestData);
                 break;
 
+            case 'createOrUpdateProposta':
+                $response = PropostaController::createOrUpdateProposta($requestData);
+                break;
+
             case 'getOrderDetailsByControle':
                 if (isset($requestData['num_controle'])) {
                     $response = OrderServiceController::getOrderDetailsByControle($requestData['num_controle']);
@@ -289,6 +294,14 @@ if (isset($data['method']) && isset($data['data'])) {
             case 'getOrderDetailsByDocumento':
                 if (isset($requestData['documento'])) {
                     $response = OrderServiceController::getOrderDetailsByDocumento($requestData['documento']);
+                } else {
+                    throw new Exception("Campo obrigatório: documento");
+                }
+                break;
+
+            case 'getPropostaDetailsByDocumento':
+                if (isset($requestData['documento'])) {
+                    $response = PropostaController::getPropostaDetailsByDocumento($requestData['documento']);
                 } else {
                     throw new Exception("Campo obrigatório: documento");
                 }
@@ -305,6 +318,14 @@ if (isset($data['method']) && isset($data['data'])) {
             case 'generatePropostaPdf':
                 if (isset($requestData['documento'])) {
                     $response = OrderServiceController::generatePropostaPdf($requestData['documento']);
+                } else {
+                    throw new Exception("Campo obrigatório: documento");
+                }
+                break;
+
+            case 'getPropostaPdf':
+                if (isset($requestData['documento'])) {
+                    $response = PropostaController::getPropostaPdf($requestData['documento']);
                 } else {
                     throw new Exception("Campo obrigatório: documento");
                 }

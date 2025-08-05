@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Criar Proposta</title>
+
+    <link rel="stylesheet" href="bsb/plugins/node-waves/waves.css">
+    <link rel="stylesheet" href="bsb/plugins/animate-css/animate.css">
+    <link href="bsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bsb/css/style.css" rel="stylesheet">
+    <link href="bsb/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const largura = window.innerWidth;
+            const altura = window.innerHeight;
+
+            if (largura <= 1366 && altura <= 768) {
+                document.body.style.zoom = "80%";
+            }
+        });
+    </script>
+
+
+
+</head>
+<body class="theme-blue">
+<div class="container-fluid">
+    <div class="block-header">
+        <br>
+    </div>
+
+    <div class="card">
+        <div class="header" style="position: relative;">
+            <h2>Dados da Proposta</h2>
+            <button class="btn btn-success" onclick="retornarLista()" style="position: absolute; top: 10px; right: 10px;">Retornar Lista</button>
+        </div>
+
+
+        <div class="body">
+            <form id="form-ordem">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label>Cliente</label>
+                        <input type="hidden" id="cliente_id" name="cliente_id">
+                        <input type="text" placeholder="Selecione o Cliente..." id="cliente_nome" class="form-control" readonly onclick="abrirModalClientes()">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label>Evento</label>
+                        <input type="hidden" id="evento_id" name="evento_id">
+                        <input type="text" placeholder="Seleciona o Evento..." id="evento_nome" class="form-control" readonly onclick="abrirModalEventos()">
+                    </div>
+                    <div class="col-md-6">
+                        <input type="hidden" value=" " id="evento_endereco" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="hidden" value=" " id="evento_place_url" class="form-control" readonly>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Data de Montagem</label>
+                        <input type="datetime-local" id="data_montagem" name="data_montagem" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Data de Recolhimento</label>
+                        <input type="datetime-local" id="data_recolhimento" name="data_recolhimento" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Contato</label>
+                        <input type="text" placeholder="Insira o Nome e Contato..." id="contato_montagem" name="contato_montagem" class="form-control">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Local</label>
+                        <input type="text" id="local" placeholder="Ex: Sala1, Bloco, Sala Topazio" name="local" class="form-control">
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Itens -->
+    <div class="card">
+        <div class="header">
+            <h2>Itens <a class="btn btn-primary" href="javascript:void(0)" onclick="abrirModalItem()" style="float:right;"></i>Adicionar</a></h2>
+        </div>
+
+        <div class="body">
+            <table class="table table-striped table-hover" id="tabela-itens">
+                <thead>
+                <tr>
+                    <th style="display:none;">ID</th>
+                    <th>Descrição</th>
+                    <th>Observação</th>
+                    <th>Valor</th>
+                    <th>Quant.</th>
+                    <th>Periodo</th>
+                    <th style="display:none;">Dias Uso</th>
+                    <th>Total (R$)</th>
+                    <th>Ação</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagamentos -->
+    <div class="card">
+        <div class="header">
+            <h2>Pagamentos <a class="btn btn-primary" href="javascript:void(0)" onclick="abrirModalPagamento()" style="float:right;">Adicionar</a></h2>
+        </div>
+        <div class="body">
+            <table class="table table-striped table-hover" id="tabela-pagamentos">
+                <thead>
+                <tr>
+                    <th>Descrição</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Ação</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <div class="card">
+        <div class="body">
+            <div class="row">
+                <div class="col-md-4 col-md-offset-8 text-right">
+                    <h4><b>Valor Total:</b> R$ <span id="total_os">0,00</span></h4>
+                </div>
+            </div>
+
+            <label for="obs"><b>Observação</b></label>
+            <div class="form-line">
+                <textarea id="obs" class="form-control no-resize" rows="3" placeholder="Observações da Proposta..."></textarea>
+            </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" onclick="salvarProposta()">Salvar Proposta</button>
+    </div>
+
+
+
+
+</div>
+
+<!-- Modal Clientes -->
+<div class="modal fade" id="modalClientes" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 class="modal-title">Selecionar Cliente</h4>
+                <button class="btn btn-primary btn-sm" onclick="abrirCadastroIframe('Novo Cliente', 'https://bionetecnologia.com.br/crm/external/createCliente.html')">
+                    <i class="fa fa-plus"></i> Novo Cliente
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <input type="text" class="form-control" id="filtro-clientes" placeholder="Buscar cliente..." onkeyup="filtrarTabela('filtro-clientes', 'tabela-clientes')">
+                <br>
+                <table class="table table-striped table-hover" id="tabela-clientes">
+                    <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>CPF/CNPJ</th>
+                        <th>Ação</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Modal Eventos -->
+<div class="modal fade" id="modalEventos" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h4 class="modal-title">Selecionar Evento</h4>
+                <button class="btn btn-primary btn-sm" onclick="abrirCadastroIframe('Novo Evento', 'https://bionetecnologia.com.br/crm/external/createEvento.html')">
+                    <i class="fa fa-plus"></i> Novo Evento
+                </button>
+            </div>
+
+            <div class="modal-body">
+                <input type="text" class="form-control" id="filtro-eventos" placeholder="Buscar evento..." onkeyup="filtrarTabela('filtro-eventos', 'tabela-eventos')">
+                <br>
+                <table class="table table-striped table-hover" id="tabela-eventos">
+                    <thead>
+                    <tr>
+                        <th>Nome</th>
+                        <th>Data Início</th>
+                        <th>Endereço</th>
+                        <th>Ação</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Modal genérico para cadastros via iframe -->
+<div class="modal fade" id="modalCadastroIframe" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="iframeModalTitle">Novo Cadastro</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding:0;">
+                <iframe id="iframeCadastro" src="" width="100%" height="600px" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal Novo Item -->
+<div class="modal fade" id="modalNovoItem" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Adicionar Item à Proposta</h4>
+            </div>
+
+            <div class="modal-body">
+                <!-- Card de seleção do material -->
+                <div class="card">
+                    <div class="header"><strong>Selecionar Material</strong></div>
+                    <div class="body">
+                        <select id="selectMaterial" class="form-control" style="width: 100%;">
+                            <option value="">Selecione o material...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Card de edição dos dados -->
+                <div class="card" id="formDadosItem" style="display: none;">
+                    <div class="header"><strong>Dados do Item</strong></div>
+                    <div class="body">
+                        <input type="hidden" id="material_id_modal">
+
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label>Descrição</label>
+                                <input type="text" id="descricao_item_modal" class="form-control">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-12">
+                            <label>Observação</label>
+                            <textarea id="observacao_item_modal" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <br>
+
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label>Valor Unitário (R$)</label>
+                                <input type="number" id="valor_item_modal" class="form-control" step="0.01" onchange="calcularSubtotalModalItem()">
+                            </div>
+                            <div class="col-md-4">
+                                <label>Quantidade</label>
+                                <input type="number" id="quantidade_item_modal" class="form-control" onchange="calcularSubtotalModalItem()">
+                            </div>
+                            <div class="col-md-4">
+                                <label>Subtotal</label>
+                                <div class="form-control" id="subtotal_item_modal">R$ 0,00</div>
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>Data Início</label>
+                                <input type="date" id="data_inicio_item_modal" class="form-control" onchange="calcularSubtotalModalItem()">
+                            </div>
+                            <div class="col-md-6">
+                                <label>Data Final</label>
+                                <input type="date" id="data_fim_item_modal" class="form-control" onchange="calcularSubtotalModalItem()">
+                            </div>
+                        </div>
+
+                        <br>
+
+                        <div class="alert alert-info">
+                            <strong>Total atual da OS:</strong> <span id="total_os_label">R$ 0,00</span>
+                        </div>
+
+                        <button class="btn btn-success btn-block" onclick="adicionarItemDaModal()">Adicionar à Lista</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+<!-- Modal Novo Pagamento -->
+<div class="modal fade" id="modalNovoPagamento" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h4 class="modal-title">Adicionar Pagamento</h4>
+            </div>
+
+            <div class="modal-body">
+                <div class="row">
+                    <label>Método de Pagamento</label>
+                    <select id="selectMetodoPagamento" class="form-control" style="width: 100%;">
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+                <br>
+
+                <div class="row">
+                    <label>Data do Pagamento</label>
+                    <input type="date" id="data_pagamento_modal" class="form-control">
+                </div>
+                <br>
+
+                <div class="row">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="valor_pagamento_modal" class="form-control" step="0.01">
+                </div>
+                <br>
+
+                <div class="row">
+                    <label>Descrição</label>
+                    <textarea id="descricao_pagamento_modal" class="form-control" rows="2"></textarea>
+                </div>
+
+                <br>
+
+                <div class="alert alert-info">
+                    <strong>Total atual da OS:</strong> <span id="total_os_pagamento_label">R$ 0,00</span>
+                </div>
+
+                <button class="btn btn-success btn-block" onclick="adicionarPagamentoDaModal()">Adicionar Pagamento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+<script src="bsb/plugins/sweetalert/sweetalert.min.js"></script>
+<script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+<script src="js/proposta.js"></script>
+<script src="bsb/plugins/jquery-inputmask/jquery.inputmask.bundle.js"></script>
+
+<script>
+    function filtrarTabela(inputId, tabelaId) {
+        const filtro = document.getElementById(inputId).value.toLowerCase();
+        const tabela = document.getElementById(tabelaId);
+        const linhas = tabela.getElementsByTagName("tr");
+
+        for (let i = 1; i < linhas.length; i++) {
+            const colunas = linhas[i].getElementsByTagName("td");
+            let encontrou = false;
+
+            for (let j = 0; j < colunas.length; j++) {
+                const texto = colunas[j].textContent || colunas[j].innerText;
+                if (texto.toLowerCase().indexOf(filtro) > -1) {
+                    encontrou = true;
+                    break;
+                }
+            }
+
+            linhas[i].style.display = encontrou ? "" : "none";
+        }
+    }
+</script>
+
+
+
+</body>
+</html>

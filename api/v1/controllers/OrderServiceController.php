@@ -13,7 +13,6 @@ use Dompdf\Options;
 class OrderServiceController
 {
 
-
     public static function generateQrBase64($url){
         $endpoint = 'https://smiley.codes/qrcode/generator.php';
 
@@ -817,10 +816,6 @@ class OrderServiceController
             'url' => $publicUrl
         ];
     }
-
-
-
-
 
 
 }

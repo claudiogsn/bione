@@ -9,6 +9,7 @@ require_once 'controllers/UserController.php';
 require_once 'controllers/FaturaController.php';
 require_once 'controllers/MenuMobileController.php';
 require_once 'controllers/PropostaController.php';
+require_once 'controllers/LocalItemEventoController.php';
 
 $json = file_get_contents('php://input');
 $data = json_decode($json, true);
@@ -349,6 +350,9 @@ if (isset($data['method']) && isset($data['data'])) {
             case 'listOrdersByPeriodo':
                 $response = OrderServiceController::listOrdersByPeriodo($requestData);
                 break;
+            case 'listPropostasByPeriodo':
+                $response = PropostaController::listPropostasByPeriodo($requestData);
+                break;
             case 'listMetodosPagamento':
                 $response = OrderServiceController::listMetodosPagamento();
                 break;
@@ -527,6 +531,13 @@ if (isset($data['method']) && isset($data['data'])) {
                 } else {
                     $response = ["success" => false, "message" => "ID do menu não informado."];
                 }
+                break;
+            case 'createLocalItemEvento':
+                $response = LocalItemEventoController::createLocalItemEvento($requestData);
+                break;
+
+            case 'listLocalItemEventoByEvento':
+                $response = LocalItemEventoController::listLocalItemEventoByEvento($requestData['evento_id']);
                 break;
 
 

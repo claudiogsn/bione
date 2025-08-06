@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Listagem de Propostas</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="bsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bsb/plugins/sweetalert/sweetalert.css" rel="stylesheet">
+    <link href="bsb/css/style.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const largura = window.innerWidth;
+            const altura = window.innerHeight;
+
+            if (largura <= 1366 && altura <= 768) {
+                document.body.style.zoom = "80%";
+            }
+        });
+    </script>
+
+    <style>
+        @media (max-width: 768px) {
+            body, .form-control, .modal-content, table, th, td, button {
+                font-size: 12px !important;
+            }
+        }
+    </style>
+</head>
+<body class="theme-blue">
+<div class="container-fluid">
+    <br />
+    <div class="card">
+        <div class="header">
+            <h2>PROPOSTAS</h2>
+        </div>
+        <div class="body">
+            <div class="row" style="margin-bottom: 10px;">
+                <div class="col-sm-3">
+                    <label for="filtroOS">Filtro</label>
+                    <input type="text" id="filtroOS" class="form-control" placeholder="Filtrar por cliente ou evento">
+                </div>
+                <div class="col-sm-2">
+                    <label for="dataInicio">Data Início</label>
+                    <input type="date" id="dataInicio" class="form-control">
+                </div>
+                <div class="col-sm-2">
+                    <label for="dataFim">Data Fim</label>
+                    <input type="date" id="dataFim" class="form-control">
+                </div>
+                <div class="col-sm-2 text-right d-flex align-items-end justify-content-end">
+                    <button class="btn btn-success" id="btnListModelo" style="margin-top: 24px;">Nova Proposta</button>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover" id="tabela-propostas">
+                    <thead>
+                    <tr>
+                        <th style="width: 40px; padding: 0;" class="text-center"></th>
+                        <th style="width: 28px; padding: 0;" class="text-center"></th>
+                        <th style="width: 28px; padding: 0;" class="text-center"></th>
+                        <th>Documento</th>
+                        <th>Evento</th>
+                        <th>Cliente</th>
+                        <th>Data Montagem</th>
+                        <th>Início Evento</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal Detalhes Proposta -->
+<div class="modal fade" id="modalDetalhesProposta" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document"> <!-- Aumenta a largura -->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modalLabel">Detalhes da Proposta</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="modal-body" id="conteudoProposta">
+                <!-- Conteúdo será preenchido dinamicamente via JS -->
+            </div>
+
+            <div class="modal-footer" id="footerStatus" style="display: none;">
+                <!-- Select e botão são preenchidos dinamicamente via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modalPdfFatura" tabindex="-1" role="dialog" aria-labelledby="pdfLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document" style="max-width: 95%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Documento Gerado</h4>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <!-- Botões acima do PDF -->
+            <div class="modal-body p-0" style="height: 90vh; display: flex; flex-direction: column;">
+                <center>
+                <div class="d-flex justify-content-center p-3 border-bottom" style="gap: 20px;">
+                    <button class="btn btn-success btn-lg px-4 d-flex align-items-center justify-content-center" style="min-width: 180px;" onclick="baixarPdfAtual()">
+                        <span class="mr-2">Baixar</span> <i class="fa-solid fa-download"></i>
+                    </button>
+                    <button class="btn btn-info btn-lg px-4 d-flex align-items-center justify-content-center" style="min-width: 180px;" onclick="imprimirPdfAtual()">
+                        <span class="mr-2">Imprimir</span> <i class="fa-solid fa-print"></i>
+                    </button>
+                    <button class="btn btn-primary btn-lg px-4 d-flex align-items-center justify-content-center" style="min-width: 180px;" onclick="compartilharPdfAtual()">
+                        <span class="mr-2">Compartilhar</span> <i class="fa-solid fa-share"></i>
+                    </button>
+                </div>
+                </center>
+                <br>
+
+                <iframe id="iframePdfFatura" style="flex: 1; width: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+<script>
+    const baseUrl = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/api/v1/index.php'
+        : 'http://localhost/bione/api/v1/index.php';
+
+    const baseUrlRedirect = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/external'
+        : 'http://localhost/bione/external';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const user = urlParams.get('user');
+
+    const statusMap = {
+        "0": { label: "Removida", color: "red" },
+        "1": { label: "Em Aprovação", color: "orange" },
+        "2": { label: "Aprovada", color: "blue" },
+        "5": { label: "Finalizada", color: "green" },
+        "6": { label: "Faturada", color: "deep-purple" },
+    };
+
+
+
+    $(document).ready(() => {
+        const hoje = new Date();
+
+        const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+        const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 2, 0);
+
+
+        $('#dataInicio').val(primeiroDia.toISOString().split('T')[0]);
+        $('#dataFim').val(ultimoDia.toISOString().split('T')[0]);
+
+        $('#dataInicio, #dataFim').on('change', carregarPropostas);
+
+        $('#filtroOS').on('input', function () {
+            const termo = $(this).val().toLowerCase();
+            $('#tabela-os tbody tr').each(function () {
+                $(this).toggle($(this).text().toLowerCase().includes(termo));
+            });
+        });
+
+        $('#btnListModelo').click(() => {
+            window.location.href = `${baseUrlRedirect}/createProposta.html?user=${user}&token=${token}`;
+        });
+
+        carregarPropostas();
+    });
+
+    async function alterarStatusProposta(documento) {
+        const novoStatus = $('#statusSelect').val();
+
+        if (!novoStatus) {
+            return Swal.fire('Erro', 'Selecione um status.', 'warning');
+        }
+
+        try {
+            const res = await axios.post(baseUrl, {
+                method: 'updateStatusOrderByDocumento',
+                token,
+                data: {
+                    documento,
+                    status: novoStatus
+                }
+            });
+
+            if (res.data.success) {
+                Swal.fire('Sucesso', 'Status atualizado com sucesso.', 'success');
+                $('#modalDetalhesProposta').modal('hide');
+                carregarPropostas(); // Se tiver uma função para recarregar a lista
+            } else {
+                throw new Error(res.data.message || 'Erro ao atualizar status');
+            }
+        } catch (err) {
+            Swal.fire('Erro', 'Erro ao atualizar status.', 'error');
+        }
+    }
+
+    async function carregarPropostas() {
+        const data_inicio = $('#dataInicio').val();
+        const data_fim = $('#dataFim').val();
+
+        if (!data_inicio || !data_fim) return;
+
+        try {
+            const res = await axios.post(baseUrl, {
+                method: "listPropostasByPeriodo",
+                token,
+                data: { data_inicio, data_fim }
+            });
+
+            if (!res.data.success) throw new Error('Falha na resposta');
+
+            const tbody = $('#tabela-propostas tbody');
+            tbody.empty();
+
+            res.data.propostas.forEach(proposta => {
+                // Fatura
+                let colFatura = '';
+
+                if (proposta.status === "6") {
+                    colFatura = `
+                <a href="#" onclick="event.stopPropagation(); visualizarFatura('${proposta.documento}')" title="Visualizar Fatura">
+                    <i class="fas fa-file-invoice-dollar purple"></i>
+                </a>`;
+                } else {
+                    colFatura = `
+                <a href="#" onclick="event.stopPropagation(); gerarFatura('${proposta.documento}')" title="Gerar Fatura">
+                    <i class="fa-solid fa-hand-holding-dollar green"></i>
+                </a>`;
+                }
+
+                // Status
+                const statusObj = statusMap[proposta.status] || { label: "Desconhecido", color: "default" };
+                const statusHtml = `<span class="label bg-${statusObj.color}">${statusObj.label}</span>`;
+
+                const colEditar =
+                    `<a href="#" onclick="event.stopPropagation(); editarProposta('${proposta.documento}')" title="Editar">
+                    <i class="fas fa-edit orange"></i>
+               </a>`;
+                const colDetalhada =
+                    `<a href="#" onclick="event.stopPropagation(); exportarPropostaDetalhada('${proposta.documento}')" title="Proposta Detalhada">
+                    <i class="fas fa-file-alt blue"></i>
+               </a>`;
+                const row = `
+            <tr onclick="abrirModalProposta('${proposta.documento}')" style="cursor: pointer;">
+                <td class="text-center">${colEditar}</td>
+                <td class="text-center">${colDetalhada}</td>
+                <td class="text-center">${colFatura}</td>
+                <td>${proposta.documento}</td>
+                <td>${proposta.nome_evento}</td>
+                <td>${proposta.nome_cliente}</td>
+                <td>${formatarData(proposta.data_montagem)}</td>
+                <td>${formatarData(proposta.data_evento_inicio)}</td>
+                <td>${statusHtml}</td>
+            </tr>`;
+
+                tbody.append(row);
+            });
+        } catch (err) {
+            Swal.fire('Erro', 'Não foi possível carregar as propostas.', 'error');
+        }
+    }
+
+    function editarProposta(documento) {
+        window.location.href = `${baseUrlRedirect}/editProposta.html?user=${user}&token=${token}&documento=${documento}`;
+    }
+
+    function exportarPropostaDetalhada(documento) {
+        exportarDocumento(documento, 'proposta');
+    }
+
+    function visualizarFatura(documento) {
+        exportarDocumento(documento, 'fatura');
+    }
+
+    function formatarData(dataStr) {
+        if (!dataStr) return '-';
+        const d = new Date(dataStr);
+        return d.toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+    }
+
+    async function abrirModalProposta(documento) {
+        try {
+            const res = await axios.post(baseUrl, {
+                method: 'getPropostaDetailsByDocumento',
+                token,
+                data: { documento }
+            });
+
+            if (!res.data.success) {
+                throw new Error("Erro ao carregar detalhes");
+            }
+
+            const { proposta, cliente, evento, itens, payments } = res.data.details;
+
+            const statusMap = {
+                "0": { label: "Removida", color: "danger" },
+                "1": { label: "Em Aprovação", color: "warning" },
+                "2": { label: "Aprovada", color: "info" },
+                "3": { label: "Em Montagem", color: "primary" },
+                "4": { label: "Em Andamento", color: "blue" },
+                "5": { label: "Finalizada", color: "success" }
+            };
+
+            const status = statusMap[proposta.status] || { label: "Desconhecido", color: "default" };
+
+            const html = `
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="active"><a href="#tab-cabecalho" data-toggle="tab">Cabeçalho</a></li>
+                <li role="presentation"><a href="#tab-itens" data-toggle="tab">Itens e Serviços</a></li>
+               <li role="presentation"><a href="#tab-pagamentos" data-toggle="tab">Pagamentos</a></li>
+            </ul>
+
+            <div class="tab-content" style="margin-top: 15px;">
+                <div role="tabpanel" class="tab-pane active" id="tab-cabecalho">
+                    <h5><strong>Proposta:</strong> ${proposta.documento} <span class="label label-${status.color}">${status.label}</span></h5>
+                    <hr>
+                    <p><strong>Evento:</strong> ${evento.nome}</p>
+                    <p><strong>Local:</strong> ${evento.local}</p>
+                    <p><strong>Maps: </strong><a href="${evento.place_url}" target="_blank">${evento.place_url}</a></p>
+                    <p><strong>Período:</strong> ${formatarData(evento.data_inicio)} até ${formatarData(evento.data_fim)}</p>
+                    <hr>
+                    <p><strong>Cliente:</strong> ${cliente.nome}</p>
+                    <p><strong>Telefone:</strong> ${cliente.telefone}</p>
+                    <p><strong>Endereço:</strong> ${cliente.endereco}, ${cliente.bairro}, ${cliente.cidade} - ${cliente.estado}</p>
+                    <hr>
+                     <p><strong>Contato Montagem:</strong> ${proposta.contato_montagem}</p>
+                     <p><strong>Local Montagem:</strong> ${proposta.local_montagem}</p>
+                    <p><strong>Observaçoes:</strong> ${proposta.observacao}</p>
+                    <p><strong>Data Montagem:</strong> ${formatarData(proposta.data_montagem)}</p>
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="tab-itens">
+                    <h6><strong>Itens</strong></h6>
+                    <table class="table table-striped table-hover">
+                        <thead><tr><th>Descrição</th><th>Quantidade</th><th>Dias Uso</th></tr></thead>
+                        <tbody>
+                            ${itens.map(i => `<tr><td>${i.descricao}<br>${i.observacao || ''}</td><td>${i.quantidade}</td><td>${i.dias_uso}</td></tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div role="tabpanel" class="tab-pane" id="tab-pagamentos">
+                    <table class="table table-striped table-hover">
+                        <thead><tr><th>Data</th><th>Valor</th><th>Forma</th></tr></thead>
+                        <tbody>
+                            ${payments.map(p => `
+                                <tr>
+                                    <td>${formatarData(p.data_pg)}</td>
+                                    <td>R$ ${parseFloat(p.valor_pg).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                                    <td>${p.forma_nome}</td>
+                                </tr>`).join('')}
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+        `;
+
+            $('#conteudoProposta').html(html);
+            $('#modalDetalhesProposta').modal('show');
+
+                const footerHtml = `
+                <div>
+                    <select id="statusSelect" class="form-control">
+                        <option value="0">Removida</option>
+                        <option value="1">Em Aprovação</option>
+                        <option value="2">Aprovada</option>
+                        <option value="5">Finalizada</option>
+                    </select>
+                    <br>
+                    <span>
+                        <button class="btn btn-primary" onclick="alterarStatusProposta('${proposta.documento}')">Alterar Status</button>
+                    </span>
+                </div>`;
+                $('#footerStatus').html(footerHtml).show();
+                $('#statusSelect').val(proposta.status);
+
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Erro', 'Erro ao carregar detalhes da Proposta.', 'error');
+        }
+    }
+
+
+    async function exportarDocumento(documento, tipo) {
+        try {
+            let metodo;
+
+            switch (tipo) {
+                case 'proposta':
+                    metodo = "getPropostaPdf";
+                    break;
+                case 'fatura':
+                    metodo = "generateFaturaPdf";
+                    break;
+                default:
+                    throw new Error("Tipo de documento inválido.");
+            }
+
+            Swal.fire({ title: 'Gerando documento...', didOpen: () => Swal.showLoading() });
+
+            const gerarPdf = await axios.post(baseUrl, {
+                method: metodo,
+                token,
+                data: { documento: documento }
+            });
+
+            if (!gerarPdf.data.success) throw new Error(gerarPdf.data.message);
+
+            Swal.close();
+            visualizarPdfEmModal(gerarPdf.data.url);
+
+        } catch (err) {
+            Swal.fire('Erro', err.message || 'Erro ao gerar documento.', 'error');
+        }
+    }
+
+
+    async function gerarFatura(documento) {
+        try {
+            Swal.fire({ title: 'Gerando fatura...', didOpen: () => Swal.showLoading() });
+
+            // 1. Chamar o método para gerar a fatura
+            const resFatura = await axios.post(baseUrl, {
+                method: 'generateFaturaByOrder',
+                token,
+                data: { documento }
+            });
+
+            if (!resFatura.data.success) throw new Error(resFatura.data.message);
+
+            // 2. Gerar o PDF da fatura
+            const resPdf = await axios.post(baseUrl, {
+                method: 'generateFaturaPdf',
+                token,
+                data: { documento_os: documento }
+            });
+
+            if (!resPdf.data.success) throw new Error('Fatura criada, mas falha ao gerar PDF.');
+
+            Swal.close();
+            visualizarPdfEmModal(resPdf.data.url);
+            carregarPropostas();
+
+        } catch (err) {
+            Swal.fire('Erro', err.message || 'Erro ao gerar fatura', 'error');
+        }
+    }
+
+    let urlPdfAtual = ''; // armazenar URL atual exibida no iframe
+
+    function visualizarPdfEmModal(url) {
+        urlPdfAtual = url;
+        $('#iframePdfFatura').attr('src', url);
+        $('#modalPdfFatura').modal('show');
+    }
+
+    function baixarPdfAtual() {
+        if (!urlPdfAtual) return;
+        const fileName = urlPdfAtual.split('/').pop() || 'documento.pdf';
+
+        const a = document.createElement('a');
+        a.href = urlPdfAtual;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function imprimirPdfAtual() {
+        const iframe = document.getElementById('iframePdfFatura');
+        if (iframe && iframe.contentWindow) {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        }
+    }
+
+    async function compartilharPdfAtual() {
+        if (!urlPdfAtual) return;
+
+        try {
+            const response = await fetch(urlPdfAtual);
+            const blob = await response.blob();
+
+            const fileName = urlPdfAtual.split('/').pop() || 'documento.pdf';
+            const file = new File([blob], fileName, { type: 'application/pdf' });
+
+            if (!navigator.canShare || !navigator.canShare({ files: [file] })) {
+                return Swal.fire('Aviso', 'Seu navegador não suporta compartilhamento de arquivos.', 'warning');
+            }
+
+            await navigator.share({
+                title: 'Documento Gerado',
+                text: 'Confira este PDF:',
+                files: [file]
+            });
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Erro', 'Erro ao compartilhar o PDF.', 'error');
+        }
+    }
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

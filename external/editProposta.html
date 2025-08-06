@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Adicionar Itens à Proposta</title>
+    <link href="bsb/plugins/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="bsb/css/style.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+    <script src="bsb/plugins/bootstrap/js/bootstrap.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <style>
+        body { background: #f7f7f7; }
+        .card { background: #fff; margin-bottom: 24px; border-radius: 8px; box-shadow: 0 2px 6px #0002; }
+        .well { background: #f0f0f0; border-radius: 8px; }
+        th, td { vertical-align: middle!important; }
+        .fa-trash.red { color: #e74c3c; }
+    </style>
+</head>
+<body class="theme-blue">
+<div class="container" style="max-width:1100px; margin-top:30px;">
+    <h3>Adicionar/Editar Itens à Proposta</h3>
+    <div id="dados-proposta" class="well"></div>
+
+    <div class="card">
+        <div class="header">
+            <h2>Itens
+                <a class="btn btn-primary" href="javascript:void(0)" onclick="abrirModalItem()" style="float:right;">Adicionar</a>
+            </h2>
+        </div>
+        <div class="body">
+            <table class="table table-striped" id="tabela-itens">
+                <thead>
+                <tr>
+                    <th>Descrição</th>
+                    <th>Observação</th>
+                    <th>Valor</th>
+                    <th>Quant.</th>
+                    <th>Período</th>
+                    <th>Local</th>
+                    <th>Ação</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div class="text-right">
+                <h4><b>Valor Total:</b> R$ <span id="total_os">0,00</span></h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="header">
+            <h2>Pagamentos
+                <a class="btn btn-primary" href="javascript:void(0)" onclick="abrirModalPagamento()" style="float:right;">Adicionar</a>
+            </h2>
+        </div>
+        <div class="body">
+            <table class="table table-striped" id="tabela-pagamentos">
+                <thead>
+                <tr>
+                    <th>Método</th>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Descrição</th>
+                    <th>Ação</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <button class="btn btn-success btn-block" onclick="salvarProposta()">Salvar Proposta</button>
+</div>
+
+<!-- MODAL NOVO ITEM -->
+<div class="modal fade" id="modalNovoItem" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Adicionar Item</h4>
+            </div>
+            <div class="modal-body">
+                <!-- Card de seleção do material -->
+                <div class="card">
+                    <div class="header"><strong>Selecionar Material</strong></div>
+                    <div class="body">
+                        <select id="selectMaterial" class="form-control" style="width: 100%;">
+                            <option value="">Selecione o material...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card" id="cardLocalEvento" style="margin-bottom: 16px;">
+                    <div class="header">
+                        <strong>Selecionar Local do Evento</strong>
+                        <button type="button" id="btnNovoLocalEvento" class="btn btn-primary btn-sm" style="float: right; margin-top: -5px;">
+                            <i class="fa fa-plus"></i> Novo Local
+                        </button>
+                    </div>
+                    <div class="body">
+                        <select id="selectLocalEvento" class="form-control">
+                            <option value="">Selecione o local...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card" id="formDadosItem" style="display: none;">
+                    <div class="header"><strong>Dados do Item</strong></div>
+                    <div class="body">
+                        <input type="hidden" id="material_id_modal">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label>Descrição</label>
+                                <input type="text" id="descricao_item_modal" class="form-control">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <label>Observação</label>
+                                <textarea id="observacao_item_modal" class="form-control" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label>Valor Unitário (R$)</label>
+                                <input type="number" id="valor_item_modal" class="form-control" step="0.01" onchange="calcularSubtotalModalItem()">
+                            </div>
+                            <div class="col-md-4">
+                                <label>Quantidade</label>
+                                <input type="number" id="quantidade_item_modal" class="form-control" onchange="calcularSubtotalModalItem()">
+                            </div>
+                            <div class="col-md-4">
+                                <label>Subtotal</label>
+                                <div class="form-control" id="subtotal_item_modal">R$ 0,00</div>
+                            </div>
+                        </div>
+                        <br>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label>Data Início</label>
+                                <input type="date" id="data_inicio_item_modal" class="form-control" onchange="calcularSubtotalModalItem()">
+                            </div>
+                            <div class="col-md-6">
+                                <label>Data Final</label>
+                                <input type="date" id="data_fim_item_modal" class="form-control" onchange="calcularSubtotalModalItem()">
+                            </div>
+                        </div>
+                        <br>
+                        <button class="btn btn-success btn-block" onclick="adicionarItemDaModal()">Adicionar à Lista</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- MODAL NOVO PAGAMENTO -->
+<div class="modal fade" id="modalNovoPagamento" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Adicionar Pagamento</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <label>Método de Pagamento</label>
+                    <select id="selectMetodoPagamento" class="form-control" style="width: 100%;">
+                        <option value="">Selecione...</option>
+                    </select>
+                </div>
+                <br>
+                <div class="row">
+                    <label>Data do Pagamento</label>
+                    <input type="date" id="data_pagamento_modal" class="form-control">
+                </div>
+                <br>
+                <div class="row">
+                    <label>Valor (R$)</label>
+                    <input type="number" id="valor_pagamento_modal" class="form-control" step="0.01">
+                </div>
+                <br>
+                <div class="row">
+                    <label>Descrição</label>
+                    <textarea id="descricao_pagamento_modal" class="form-control" rows="2"></textarea>
+                </div>
+                <br>
+                <button class="btn btn-success btn-block" onclick="adicionarPagamentoDaModal()">Adicionar Pagamento</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const baseUrl = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/api/v1/index.php'
+        : 'http://localhost/bione/api/v1/index.php';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const documento = urlParams.get('documento');
+
+    let propostaData = {};
+    let itens = [];
+    let pagamentos = [];
+
+    if (!token || !documento) {
+        Swal.fire('Erro', 'Token ou documento ausente na URL.', 'error');
+        throw new Error('Token/documento ausente');
+    }
+
+    $(document).ready(function() {
+        carregarProposta();
+    });
+
+    async function carregarProposta() {
+        const resp = await axios.post(baseUrl, {
+            method: "getPropostaDetailsByDocumento",
+            token,
+            data: { documento }
+        });
+
+        if (!resp.data || !resp.data.success || !resp.data.details) {
+            Swal.fire('Erro', 'Proposta não encontrada!', 'error');
+            return;
+        }
+
+        propostaData = resp.data.details;
+        itens = propostaData.itens || [];
+        pagamentos = propostaData.payments || [];
+
+        renderizarCabecalho(propostaData);
+        renderizarItens();
+        renderizarPagamentos();
+    }
+
+    function renderizarCabecalho(data) {
+        $('#dados-proposta').html(`
+        <b>Proposta:</b> ${data.proposta.documento} <br>
+        <b>Evento:</b> ${data.evento.nome} <br>
+        <b>Cliente:</b> ${data.cliente.nome} <br>
+        <b>Contato:</b> ${data.proposta.contato_montagem} <br>
+        <b>Local:</b> ${data.proposta.local_montagem} <br>
+        <b>Data Montagem:</b> ${data.proposta.data_montagem} <br>
+        <b>Data Recolhimento:</b> ${data.proposta.data_recolhimento}
+    `);
+
+        // Para datas padrão no item
+        window.DATA_INICIO_EVENTO = data.evento.data_inicio;
+        window.DATA_FIM_EVENTO = data.evento.data_fim;
+    }
+
+    function renderizarItens() {
+        const tbody = $('#tabela-itens tbody');
+        tbody.empty();
+        let total = 0;
+
+        itens.forEach((item, idx) => {
+            const valor = parseFloat(item.valor) || 0;
+            const qtd = parseInt(item.quantidade) || 0;
+            const dias = parseInt(item.dias_uso) || 1;
+            const subtotal = valor * qtd * dias;
+            total += subtotal;
+            tbody.append(`
+            <tr>
+                <td>${item.descricao}</td>
+                <td>${item.observacao || ''}</td>
+                <td>R$ ${valor.toFixed(2)}</td>
+                <td>${qtd}</td>
+                <td>${formatarPeriodo(item.data_inicial, item.data_final)}</td>
+                <td>${item.local || ''}</td>
+                <td>
+                    <a href="javascript:void(0)" onclick="removerItem(${idx})"><i class="fa fa-trash red"></i></a>
+                </td>
+            </tr>
+        `);
+        });
+
+        $('#total_os').text(total.toLocaleString('pt-BR', { minimumFractionDigits: 2 }));
+    }
+    function formatarPeriodo(ini, fim) {
+        if (!ini || !fim) return '';
+        const d1 = ini.split(' ')[0].split('-').reverse().join('/');
+        const d2 = fim.split(' ')[0].split('-').reverse().join('/');
+        return `${d1} - ${d2}`;
+    }
+    window.removerItem = function(idx) {
+        itens.splice(idx, 1);
+        renderizarItens();
+    }
+
+    // --- MODAL DE ITEM ---
+    function abrirModalItem() {
+        // Carregar materiais
+        $('#formDadosItem').hide();
+        $('#selectMaterial').empty().append('<option value="">Selecione o material...</option>');
+        $('#selectLocalEvento').empty().append('<option value="">Selecione o local...</option>'); // Limpa locais
+
+        axios.post(baseUrl, {
+            method: 'listMaterials',
+            token: token,
+            data: {}
+        }).then(res => {
+            if (Array.isArray(res.data.materials)) {
+                res.data.materials.forEach(mat => {
+                    $('#selectMaterial').append(`<option value="${mat.id}" data-nome="${mat.nome}" data-valor="${mat.valor_locacao}">${mat.nome} (${mat.unidade})</option>`);
+                });
+
+                $('#selectMaterial').select2({
+                    dropdownParent: $('#modalNovoItem')
+                });
+            }
+        });
+
+        carregarLocaisEvento(propostaData.proposta.evento_id);
+
+        $('#modalNovoItem').modal('show');
+    }
+
+    $('#selectMaterial').on('change', function () {
+        const selected = $(this).find(':selected');
+        const materialId = selected.val();
+        if (!materialId) return $('#formDadosItem').hide();
+
+        const nome = selected.data('nome');
+        const valor = selected.data('valor') || 0;
+
+        const dataInicio = formatDateOnly(window.DATA_INICIO_EVENTO);
+        const dataFim = formatDateOnly(window.DATA_FIM_EVENTO);
+
+        $('#material_id_modal').val(materialId);
+        $('#descricao_item_modal').val(nome);
+        $('#observacao_item_modal').val('');
+        $('#valor_item_modal').val(valor);
+        $('#quantidade_item_modal').val(1);
+        $('#data_inicio_item_modal').val(dataInicio);
+        $('#data_fim_item_modal').val(dataFim);
+        $('#subtotal_item_modal').text('R$ 0,00');
+
+        $('#formDadosItem').show();
+        calcularSubtotalModalItem();
+    });
+    function calcularSubtotalModalItem() {
+        const qtd = parseFloat($('#quantidade_item_modal').val()) || 1;
+        const valor = parseFloat($('#valor_item_modal').val()) || 0;
+
+        const dtInicio = new Date($('#data_inicio_item_modal').val());
+        const dtFim = new Date($('#data_fim_item_modal').val());
+
+        let dias = Math.floor((dtFim - dtInicio) / (1000 * 60 * 60 * 24)) + 1;
+        if (isNaN(dias) || dias < 1) dias = 1;
+
+        const subtotal = qtd * valor * dias;
+
+        $('#subtotal_item_modal').text(`R$ ${subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+    }
+
+    window.adicionarItemDaModal = function() {
+        const id = $('#material_id_modal').val();
+        const nome = $('#descricao_item_modal').val();
+        const observacao = $('#observacao_item_modal').val();
+        const valor = parseFloat($('#valor_item_modal').val()) || 0;
+        const qtd = parseInt($('#quantidade_item_modal').val()) || 1;
+        const dtInicio = $('#data_inicio_item_modal').val();
+        const dtFim = $('#data_fim_item_modal').val();
+        const idLocalEvento = $('#selectLocalEvento').val();
+        const nomeLocalEvento = $('#selectLocalEvento option:selected').text();
+
+        if (!idLocalEvento) {
+            Swal.fire('Atenção', 'Selecione o local do evento para o item!', 'warning');
+            return;
+        }
+
+        const dias = Math.floor((new Date(dtFim) - new Date(dtInicio)) / (1000 * 60 * 60 * 24)) + 1;
+
+        itens.push({
+            material_id: parseInt(id),
+            id_local_evento: parseInt(idLocalEvento),
+            descricao: nome,
+            valor: valor,
+            dias_uso: dias,
+            data_inicial: dtInicio,
+            data_final: dtFim,
+            quantidade: qtd,
+            observacao: observacao,
+            local: nomeLocalEvento,
+            status: 'ativo'
+        });
+
+        $('#modalNovoItem').modal('hide');
+        renderizarItens();
+    }
+
+    // --- LOCAIS DO EVENTO ---
+    function carregarLocaisEvento(eventoId) {
+        axios.post(baseUrl, {
+            method: 'listLocalItemEventoByEvento',
+            token: token,
+            data: { evento_id: eventoId }
+        }).then(res => {
+            $('#selectLocalEvento').empty().append('<option value="">Selecione o local...</option>');
+            if (res.data && res.data.success && Array.isArray(res.data.data)) {
+                res.data.data.forEach(local => {
+                    $('#selectLocalEvento').append(
+                        `<option value="${local.id}">${local.local_nome}</option>`
+                    );
+                });
+            }
+        });
+    }
+    function abrirPromptNovoLocal() {
+        const eventoId = propostaData.proposta.evento_id;
+
+        Swal.fire({
+            title: 'Novo Local',
+            input: 'text',
+            inputLabel: 'Nome do novo local',
+            inputPlaceholder: 'Digite o nome do local',
+            showCancelButton: true,
+            confirmButtonText: 'Salvar',
+            cancelButtonText: 'Cancelar',
+            inputAttributes: {
+                maxlength: 100,
+                autocapitalize: 'on',
+                autocorrect: 'on'
+            },
+            didOpen: () => {
+                Swal.getInput().focus();
+            },
+            preConfirm: (value) => {
+                if (!value || !value.trim()) {
+                    Swal.showValidationMessage('Digite o nome do local!');
+                    return false;
+                }
+                return value.trim();
+            }
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                Swal.showLoading();
+                axios.post(baseUrl, {
+                    method: 'createLocalItemEvento',
+                    token: token,
+                    data: {
+                        evento_id: eventoId,
+                        local_nome: result.value
+                    }
+                }).then(resp => {
+                    Swal.close();
+                    if (resp.data && resp.data.success) {
+                        Swal.fire('Sucesso', 'Local criado com sucesso!', 'success');
+                        carregarLocaisEvento(eventoId);
+                    } else {
+                        Swal.fire('Erro', resp.data?.message || 'Falha ao criar local.', 'error');
+                    }
+                }).catch(() => {
+                    Swal.close();
+                    Swal.fire('Erro', 'Erro de comunicação ao criar local.', 'error');
+                });
+            }
+        });
+    }
+    $(document).off('click', '#btnNovoLocalEvento').on('click', '#btnNovoLocalEvento', function () {
+        $('.modal').modal('hide');
+        setTimeout(() => {
+            abrirPromptNovoLocal();
+        }, 400);
+    });
+
+    // --- PAGAMENTOS ---
+    function renderizarPagamentos() {
+        const tbody = $('#tabela-pagamentos tbody');
+        tbody.empty();
+
+        pagamentos.forEach((pay, idx) => {
+            tbody.append(`
+            <tr>
+                <td>
+                    <input type="hidden" class="metodo_pagamento_id" value="${pay.forma_pg}">
+                    ${pay.forma_nome || ''}
+                </td>
+                <td>
+                    <input type="hidden" class="data_pagamento" value="${pay.data_pg}">
+                    ${pay.data_pg ? pay.data_pg.split(' ')[0].split('-').reverse().join('/') : ''}
+                </td>
+                <td>
+                    <input type="hidden" class="valor_pagamento" value="${pay.valor_pg}">
+                    R$ ${(parseFloat(pay.valor_pg) || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+                </td>
+                <td>
+                    <input type="hidden" class="descricao_pagamento" value="${pay.forma_descricao || ''}">
+                    ${pay.forma_descricao || ''}
+                </td>
+                <td>
+                    <a href="javascript:void(0)" onclick="removerPagamento(${idx})"><i class="fa fa-trash red"></i></a>
+                </td>
+            </tr>
+        `);
+        });
+    }
+    window.removerPagamento = function(idx) {
+        pagamentos.splice(idx, 1);
+        renderizarPagamentos();
+    }
+
+    function abrirModalPagamento() {
+        $('#modalNovoPagamento').modal('show');
+        $('#selectMetodoPagamento').empty().append('<option value="">Selecione...</option>');
+        $('#valor_pagamento_modal').val('0.00');
+        $('#data_pagamento_modal').val(new Date().toISOString().split('T')[0]);
+        $('#descricao_pagamento_modal').val('');
+
+        axios.post(baseUrl, {
+            method: 'listMetodosPagamento',
+            token: token,
+            data: {}
+        }).then(res => {
+            if (Array.isArray(res.data.metodos)) {
+                res.data.metodos.forEach(m => {
+                    $('#selectMetodoPagamento').append(
+                        `<option value="${m.id}" data-nome="${m.nome}" data-descricao="${m.descricao || ''}">${m.nome}</option>`
+                    );
+                });
+
+                $('#selectMetodoPagamento').select2({
+                    dropdownParent: $('#modalNovoPagamento')
+                });
+            }
+        });
+    }
+    window.adicionarPagamentoDaModal = function() {
+        const metodoId = $('#selectMetodoPagamento').val();
+        const metodoNome = $('#selectMetodoPagamento option:selected').text();
+        const descricao = $('#descricao_pagamento_modal').val();
+        const data = $('#data_pagamento_modal').val();
+        const valor = parseFloat($('#valor_pagamento_modal').val()) || 0;
+
+        if (!metodoId || !data || valor <= 0) {
+            return Swal.fire('Atenção', 'Preencha todos os campos do pagamento.', 'warning');
+        }
+
+        pagamentos.push({
+            forma_pg: metodoId,
+            forma_nome: metodoNome,
+            valor_pg: valor,
+            data_pg: data,
+            forma_descricao: descricao,
+            status: 'confirmado'
+        });
+
+        $('#modalNovoPagamento').modal('hide');
+        renderizarPagamentos();
+    }
+
+    // --- SALVAR PROPOSTA ---
+    function salvarProposta() {
+        if (!itens.length) {
+            Swal.fire('Atenção', 'Adicione pelo menos um item!', 'warning');
+            return;
+        }
+        const payload = {
+            proposta: {
+                ...propostaData.proposta,
+                documento: propostaData.proposta.documento
+            },
+            itens: itens,
+            payments: pagamentos
+        };
+
+        axios.post(baseUrl, {
+            method: 'createOrUpdateProposta',
+            token: token,
+            data: payload
+        }).then(response => {
+            if (response.data && response.data.success) {
+                Swal.fire('Sucesso', 'Proposta salva com sucesso!', 'success').then(() => {
+                    window.location.reload();
+                });
+            } else {
+                Swal.fire('Erro', response.data.message || 'Erro ao salvar Proposta.', 'error');
+            }
+        }).catch(error => {
+            console.error(error);
+            Swal.fire('Erro', 'Falha ao enviar dados da Proposta.', 'error');
+        });
+    }
+    const formatDateOnly = (date) => {
+        date = new Date(date);
+        const pad = n => n.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    };
+</script>
+</body>
+</html>

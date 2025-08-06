@@ -8,34 +8,12 @@ const baseUrlRedirect = window.location.hostname !== 'localhost'
 
 const urlParams = new URLSearchParams(window.location.search);
 const token = urlParams.get('token');
-const documento = urlParams.get('documento');
 const user = urlParams.get('user');
 
 if (!token) {
     Swal.fire('Erro', 'Token de autenticação ausente na URL.', 'error');
     throw new Error('Token ausente');
 }
-
-// Carregar dados se controle vier na URL
-if (documento) {
-    axios.post(`${baseUrl}`, {
-        method: 'getOrderDetailsByDocumento',
-        token: token,
-        data: { documento: documento }
-    }).then(response => {
-        if (response.data && response.data.success && response.data.details) {
-            preencherDadosDaOrdem(response.data.details);
-        }
-        else {
-            Swal.fire('Erro', response.data.message || 'Erro ao carregar ordem.', 'error');
-        }
-    }).catch(err => {
-        console.error(err);
-        Swal.fire('Erro', 'Falha ao consultar a ordem.', 'error');
-    });
-}
-
-// Salvar ou atualizar ordem
 function salvarProposta() {
     const evento_id = $('#evento_id').val();
     const cliente_id = $('#cliente_id').val();
@@ -58,6 +36,7 @@ function salvarProposta() {
         const row = $(this);
         itens.push({
             material_id: parseInt(row.find('.material_id').val()),
+            id_local_evento: parseInt(row.find('.id_local_evento').val()) || null, // <-- novo campo
             descricao: row.find('td').eq(1).text().trim(),
             valor: parseFloat(row.find('.valor_unitario').val()) || 0,
             custo: 0,
@@ -90,7 +69,6 @@ function salvarProposta() {
 
     const payload = {
         proposta: {
-            ...(documento && { documento: documento }),
             evento_id,
             cliente_id,
             data_montagem,
@@ -112,18 +90,17 @@ function salvarProposta() {
         data: payload
     }).then(response => {
         if (response.data && response.data.success) {
-            Swal.fire('Sucesso', 'Ordem salva com sucesso!', 'success').then(() => {
-                window.location.href = `${baseUrlRedirect}/listOrdem.html?user=${user}&token=${token}`;
+            Swal.fire('Sucesso', 'Proposta salva com sucesso!', 'success').then(() => {
+                window.location.href = `${baseUrlRedirect}/listProposta.html?user=${user}&token=${token}`;
             });
         } else {
-            Swal.fire('Erro', response.data.message || 'Erro ao salvar ordem.', 'error');
+            Swal.fire('Erro', response.data.message || 'Erro ao salvar Proposta.', 'error');
         }
     }).catch(error => {
         console.error(error);
-        Swal.fire('Erro', 'Falha ao enviar dados da ordem.', 'error');
+        Swal.fire('Erro', 'Falha ao enviar dados da Proposta.', 'error');
     });
 }
-
 function abrirModalClientes() {
     $('#modalClientes').modal('show');
     $('#tabela-clientes tbody').empty();
@@ -146,13 +123,11 @@ function abrirModalClientes() {
         }
     });
 }
-
 function selecionarCliente(id, nome) {
     $('#cliente_id').val(id);
     $('#cliente_nome').val(nome);
     $('#modalClientes').modal('hide');
 }
-
 function abrirModalEventos() {
     $('#modalEventos').modal('show');
     $('#tabela-eventos tbody').empty();
@@ -176,7 +151,6 @@ function abrirModalEventos() {
         }
     });
 }
-
 function selecionarEvento(id, nome, endereco, place_url, data_inicio, data_fim) {
     $('#evento_id').val(id);
     $('#evento_nome').val(nome);
@@ -210,12 +184,10 @@ function selecionarEvento(id, nome, endereco, place_url, data_inicio, data_fim) 
     window.DATA_INICIO_EVENTO = data_inicio;
     window.DATA_FIM_EVENTO = data_fim;
 }
-
 $(document).on('click', '.remover-linha', function () {
     $(this).closest('tr').remove();
     atualizarTotal();
 });
-
 function atualizarTotaisOS() {
     let total = 0;
 
@@ -237,7 +209,6 @@ function atualizarTotaisOS() {
 
     animateTotalValor(total);
 }
-
 function animateTotalValor(finalValue) {
     const element = document.getElementById('total_os');
     const current = parseFloat(element.innerText.replace(/\./g, '').replace(',', '.')) || 0;
@@ -261,7 +232,6 @@ function animateTotalValor(finalValue) {
         if (frame >= totalFrames) clearInterval(interval);
     }, 1000 / frameRate);
 }
-
 function atualizarTotal() {
     let totalItens = 0;
     $('#tabela-itens tbody tr').each(function () {
@@ -282,9 +252,8 @@ function atualizarTotal() {
 $(document).on('input', '.quantidade, .valor_unitario, .valor_servico, .valor_pago', atualizarTotal);
 
 function retornarLista() {
-    window.location.href = `${baseUrlRedirect}/listOrdem.html?user=${user}&token=${token}`;
+    window.location.href = `${baseUrlRedirect}/listProposta.html?user=${user}&token=${token}`;
 }
-
 const formatDateOnly = (date) => {
     date = new Date(date);
     const pad = n => n.toString().padStart(2, '0');
@@ -292,7 +261,6 @@ const formatDateOnly = (date) => {
     console.log(`Data formatada para input: ${dataFormatada}`);
     return dataFormatada;
 };
-
 $('#modalCadastroIframe').on('hidden.bs.modal', function () {
     if ($('#modalClientes').hasClass('in')) {
         abrirModalClientes(); // ou atualizar DataTable
@@ -301,7 +269,6 @@ $('#modalCadastroIframe').on('hidden.bs.modal', function () {
         abrirModalEventos(); // ou atualizar DataTable
     }
 });
-
 function abrirCadastroIframe(titulo, baseUrl) {
     const urlComToken = `${baseUrl}?token=${token}`;
 
@@ -309,7 +276,6 @@ function abrirCadastroIframe(titulo, baseUrl) {
     $('#iframeModalTitle').text(titulo);
     $('#modalCadastroIframe').modal('show');
 }
-
 $('#selectMaterial').on('change', function () {
     const selected = $(this).find(':selected');
     const materialId = selected.val();
@@ -333,7 +299,6 @@ $('#selectMaterial').on('change', function () {
     $('#formDadosItem').show();
     calcularSubtotalModalItem();
 });
-
 function calcularSubtotalModalItem() {
     const qtd = parseFloat($('#quantidade_item_modal').val()) || 1;
     const valor = parseFloat($('#valor_item_modal').val()) || 0;
@@ -349,7 +314,6 @@ function calcularSubtotalModalItem() {
     $('#subtotal_item_modal').text(`R$ ${subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
     $('#total_os_label').text($('#total_os').text()); // sincronia visual com total da OS
 }
-
 function adicionarItemDaModal() {
     const rowId = `item-${Date.now()}`;
     const id = $('#material_id_modal').val();
@@ -359,6 +323,14 @@ function adicionarItemDaModal() {
     const qtd = parseInt($('#quantidade_item_modal').val()) || 1;
     const dtInicio = $('#data_inicio_item_modal').val();
     const dtFim = $('#data_fim_item_modal').val();
+    const idLocalEvento = $('#selectLocalEvento').val();
+    const nomeLocalEvento = $('#selectLocalEvento option:selected').text();
+
+    // NOVO: validação do local selecionado
+    if (!idLocalEvento) {
+        Swal.fire('Atenção', 'Selecione o local do evento para o item!', 'warning');
+        return;
+    }
 
     const dias = Math.floor((new Date(dtFim) - new Date(dtInicio)) / (1000 * 60 * 60 * 24)) + 1;
     const subtotal = valor * qtd * (dias > 0 ? dias : 1);
@@ -367,6 +339,7 @@ function adicionarItemDaModal() {
         <tr id="${rowId}">
             <td style="display:none;">
                 <input type="hidden" class="material_id" value="${id}">
+                <input type="hidden" class="id_local_evento" value="${idLocalEvento}">
                 <input type="hidden" class="data_inicio" value="${dtInicio}">
                 <input type="hidden" class="data_fim" value="${dtFim}">
                 <input type="hidden" class="dias_uso" value="${dias}">
@@ -377,6 +350,7 @@ function adicionarItemDaModal() {
             <td>${qtd}</td>
             <td>${formatDateOnly(dtInicio)} - ${formatDateOnly(dtFim)}</td>
             <td style="display:none;"></td>
+            <td>${nomeLocalEvento}</td>
             <td>R$ ${subtotal.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
             <td><a href="javascript:void(0)" onclick="$(this).closest('tr').remove(); atualizarTotaisOS();"><i class="fa fa-trash red"></i></a></td>
         </tr>
@@ -385,12 +359,20 @@ function adicionarItemDaModal() {
     $('#modalNovoItem').modal('hide');
     atualizarTotaisOS();
 }
-
 function abrirModalItem() {
+    // NOVO: Verificar se evento está selecionado
+    const eventoId = $('#evento_id').val();
+    if (!eventoId) {
+        Swal.fire('Atenção', 'Selecione o evento antes de adicionar um item!', 'warning');
+        return;
+    }
+
     $('#modalNovoItem').modal('show');
     $('#formDadosItem').hide();
     $('#selectMaterial').empty().append('<option value="">Selecione o material...</option>');
+    $('#selectLocalEvento').empty().append('<option value="">Selecione o local...</option>'); // Limpa locais
 
+    // Carregar materiais
     axios.post(baseUrl, {
         method: 'listMaterials',
         token: token,
@@ -406,8 +388,83 @@ function abrirModalItem() {
             });
         }
     });
-}
 
+    // Carregar locais do evento
+    carregarLocaisEvento(eventoId);
+}
+function carregarLocaisEvento(eventoId) {
+    axios.post(baseUrl, {
+        method: 'listLocalItemEventoByEvento',
+        token: token,
+        data: { evento_id: eventoId }
+    }).then(res => {
+        $('#selectLocalEvento').empty().append('<option value="">Selecione o local...</option>');
+        if (res.data && res.data.success && Array.isArray(res.data.data)) {
+            res.data.data.forEach(local => {
+                $('#selectLocalEvento').append(
+                    `<option value="${local.id}">${local.local_nome}</option>`
+                );
+            });
+        }
+    });
+}
+function abrirPromptNovoLocal() {
+    const eventoId = $('#evento_id').val();
+
+    Swal.fire({
+        title: 'Novo Local',
+        input: 'text',
+        inputLabel: 'Nome do novo local',
+        inputPlaceholder: 'Digite o nome do local',
+        showCancelButton: true,
+        confirmButtonText: 'Salvar',
+        cancelButtonText: 'Cancelar',
+        inputAttributes: {
+            maxlength: 100,
+            autocapitalize: 'on',
+            autocorrect: 'on'
+        },
+        didOpen: () => {
+            Swal.getInput().focus();
+        },
+        preConfirm: (value) => {
+            if (!value || !value.trim()) {
+                Swal.showValidationMessage('Digite o nome do local!');
+                return false;
+            }
+            return value.trim();
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value) {
+            Swal.showLoading();
+            axios.post(baseUrl, {
+                method: 'createLocalItemEvento',
+                token: token,
+                data: {
+                    evento_id: eventoId,
+                    local_nome: result.value
+                }
+            }).then(resp => {
+                Swal.close();
+                if (resp.data && resp.data.success) {
+                    Swal.fire('Sucesso', 'Local criado com sucesso!', 'success');
+                    carregarLocaisEvento(eventoId);
+                } else {
+                    Swal.fire('Erro', resp.data?.message || 'Falha ao criar local.', 'error');
+                }
+            }).catch(() => {
+                Swal.close();
+                Swal.fire('Erro', 'Erro de comunicação ao criar local.', 'error');
+            });
+        }
+    });
+}
+$(document).off('click', '#btnNovoLocalEvento').on('click', '#btnNovoLocalEvento', function () {
+    $('.modal').modal('hide');
+    setTimeout(() => {
+        abrirPromptNovoLocal();
+    }, 400);
+});
 function abrirModalPagamento() {
     $('#modalNovoPagamento').modal('show');
     $('#selectMetodoPagamento').empty().append('<option value="">Selecione...</option>');
@@ -434,7 +491,6 @@ function abrirModalPagamento() {
         }
     });
 }
-
 function adicionarPagamentoDaModal() {
     const metodoId = $('#selectMetodoPagamento').val();
     const metodoNome = $('#selectMetodoPagamento option:selected').text();

@@ -362,6 +362,45 @@ class PropostaController
         ];
     }
 
+    public static function listPropostasByPeriodo($filters)
+    {
+        global $pdo;
+
+        if (empty($filters['data_inicio']) || empty($filters['data_fim'])) {
+            return ['success' => false, 'message' => 'Data inicial e final são obrigatórias.'];
+        }
+
+        $inicio = strtotime($filters['data_inicio']);
+        $fim = strtotime($filters['data_fim']);
+
+        if ($inicio > $fim) {
+            return ['success' => false, 'message' => 'A data inicial não pode ser maior que a data final'];
+        }
+
+        $stmt = $pdo->prepare("
+        SELECT 
+            p.*, 
+            c.nome AS nome_cliente, 
+            e.nome AS nome_evento, 
+            e.data_inicio AS data_evento_inicio,
+            e.data_fim AS data_evento_fim,
+            e.local AS local_evento
+        FROM propostas p
+        LEFT JOIN cliente c ON p.cliente_id = c.id
+        LEFT JOIN evento e ON p.evento_id = e.id
+        WHERE p.data_montagem BETWEEN :data_inicio AND :data_fim
+        ORDER BY p.data_montagem DESC
+    ");
+
+        $stmt->execute([
+            ':data_inicio' => $filters['data_inicio'],
+            ':data_fim' => $filters['data_fim']
+        ]);
+
+        return ['success' => true, 'propostas' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+    }
+
+
 
 
 }

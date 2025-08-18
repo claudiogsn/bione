@@ -48,7 +48,7 @@ function salvarOrdemServico() {
     const observacao = $('#obs').val();
 
     // Verificações obrigatórias
-    if (!evento_id || !cliente_id || !data_montagem || !data_recolhimento || !contato_montagem || !local_montagem || !endereco || !place_url) {
+    if (!evento_id || !cliente_id || !data_montagem || !data_recolhimento || !contato_montagem || !local_montagem) {
         return Swal.fire('Atenção', 'Preencha todos os campos obrigatórios.', 'warning');
     }
 

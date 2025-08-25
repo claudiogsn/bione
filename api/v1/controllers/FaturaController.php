@@ -433,6 +433,7 @@ class FaturaController
 
             <div class="footer">
                 <p><strong>Observações:</strong> Documento referente à locação de bem móvel (art. 1º, parágrafo único, da LC 116/2003). Não configura prestação de serviço. Documento sem valor fiscal.</p>
+                <p><?= $fatura['observacoes'] ?></p>
             </div>
 
         </div>

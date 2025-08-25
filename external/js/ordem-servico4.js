@@ -417,16 +417,23 @@ function abrirModalPagamento() {
     }).then(res => {
         if (Array.isArray(res.data.metodos)) {
             res.data.metodos.forEach(met => {
+                // trata valores nulos
+                const nome = met.nome || 'Sem nome';
+                const tipo = met.tipo || '';
+                const descricao = met.descricao || '';
+                const nomeSafe = nome.replace(/'/g, "\\'"); // só aplica se nome for string
+
                 $('#tabela-pagamentos-modal tbody').append(`
                     <tr>
-                        <td><strong>${met.nome}</strong><br><small>${met.tipo} ${met.descricao ? '- ' + met.descricao : ''}</small></td>
-                        <td><a href="javascript:void(0)" onclick="adicionarPagamentoSelecionado(${met.id}, '${met.nome.replace(/'/g, "\\'")}')"><i class="fa fa-plus green"></i></a></td>
+                        <td><strong>${nome}</strong><br><small>${tipo} ${descricao ? '- ' + descricao : ''}</small></td>
+                        <td><a href="javascript:void(0)" onclick="adicionarPagamentoSelecionado(${met.id}, '${nomeSafe}')"><i class="fa fa-plus green"></i></a></td>
                     </tr>
                 `);
             });
         }
     });
 }
+
 
 function adicionarPagamentoSelecionado(id, nome) {
     const rowId = `pagamento-${id}-${Date.now()}`;

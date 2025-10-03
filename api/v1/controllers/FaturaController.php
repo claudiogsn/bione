@@ -432,7 +432,7 @@ class FaturaController
 
 
             <div class="footer">
-                <p><strong>Observações:</strong> Documento referente à locação de bem móvel (art. 1º, parágrafo único, da LC 116/2003). Não configura prestação de serviço. Documento sem valor fiscal.</p>
+                <p><strong>Observações:</strong>Não é fato gerador do ISSQN a locação de bens móveis. Dispensado da emissão de notas fiscais. Conforme Lei Complementar 116 de 31/07/2003. Natureza da operação: Locação de Bens Móveis.</p>
                 <p><?= $fatura['observacoes'] ?></p>
             </div>
 

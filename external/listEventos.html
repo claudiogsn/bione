@@ -149,19 +149,6 @@
         listarEventos();
     });
 
-    $(document).on('click', '.btn-ver-detalhes', function () {
-        try {
-            const eventoBase64 = $(this).data('evento');
-            const eventoJson = atob(eventoBase64);
-            const evento = JSON.parse(eventoJson);
-            abrirModalDetalhes(evento);
-        } catch (e) {
-            Swal.fire('Erro', 'Falha ao processar os dados do evento.', 'error');
-            console.error(e);
-        }
-    });
-
-
 
     async function listarEventos() {
         const data_inicio = $('#filtroDataInicio').val();
@@ -177,44 +164,52 @@
                 }
             });
 
+            console.log(res.data);
+
             const eventos = res.data.events;
             const tbody = $('#tabela-eventos tbody');
             tbody.empty();
 
             if (!eventos || eventos.length === 0) {
-                return tbody.append('<tr><td colspan="7" class="text-center">Nenhum evento encontrado.</td></tr>');
+                return tbody.append(`
+                <tr>
+                    <td colspan="7" class="text-center">Nenhum evento encontrado.</td>
+                </tr>
+            `);
             }
 
             eventos.forEach(e => {
+
                 const placePopover = e.place_url
                     ? `<span
-            data-toggle="popover"
-            data-trigger="hover"
-            data-placement="top"
-            data-html="true"
-            title="Local no Google Maps"
-            data-content="<a href='${e.place_url}' target='_blank' class='btn btn-sm btn-primary'>Abrir no Google Maps</a>">
-            ${e.local}
-       </span>`
+                        data-toggle="popover"
+                        data-trigger="hover"
+                        data-placement="top"
+                        data-html="true"
+                        title="Google Maps"
+                        data-content="<a href='${e.place_url}' target='_blank' class='btn btn-sm btn-primary'>Abrir Mapa</a>">
+                        ${e.local}
+                   </span>`
                     : (e.local ?? '-');
 
-                const eventoData = btoa(JSON.stringify(e));
                 const row = `
-                    <tr>
-                      <td>${e.nome}</td>
-                      <td>${e.cliente_nome}</td>
-                      <td>${formatarData(e.data_inicio)}</td>
-                      <td>${formatarData(e.data_fim)}</td>
-                      <td>
-                        ${e.place_url ? `<span data-toggle="popover" data-trigger="hover" data-placement="top" data-html="true" title="Google Maps" data-content="<a href='${e.place_url}' target='_blank' class='btn btn-sm btn-primary'>Abrir Mapa</a>">${e.local}</span>` : (e.local ?? '-')}
-                      </td>
-                      <td>
-                        <button class="btn btn-sm btn-info btn-ver-detalhes" data-evento="${eventoData}">Ver Detalhes</button>
-                      </td>
-                    </tr>
-                    `;
-                tbody.append(row);
+                <tr>
+                  <td>${e.nome}</td>
+                  <td>${e.cliente_nome}</td>
+                  <td>${formatarData(e.data_inicio)}</td>
+                  <td>${formatarData(e.data_fim)}</td>
+                  <td>${placePopover}</td>
+                  <td>
+                    <button
+                        class="btn btn-sm btn-info btn-ver-detalhes"
+                        data-id="${e.id}">
+                        Ver Detalhes
+                    </button>
+                  </td>
+                </tr>
+            `;
 
+                tbody.append(row);
             });
 
         } catch (err) {
@@ -224,45 +219,73 @@
     }
 
     function abrirModalDetalhes(evento) {
-        // Popular aba de dados
+
+        // --- Segurança: fallback para evitar erro ---
+        if (!evento || typeof evento !== 'object') {
+            Swal.fire('Erro', 'Dados do evento inválidos.', 'error');
+            return;
+        }
+
+        // --- Montar HTML da aba de dados ---
         const html = `
-    <p><strong>Nome:</strong> ${evento.nome}</p>
-    <p><strong>Cliente:</strong> ${evento.cliente_nome}</p>
-    <p><strong>Capacidade:</strong> ${evento.capacidade || '-'}</p>
-    <p><strong>Datas:</strong> ${formatarData(evento.data_inicio)} até ${formatarData(evento.data_fim)}</p>
-    <p><strong>Local:</strong> ${evento.local || '-'}</p>
-    <p><strong>Endereço:</strong> ${evento.endereco || '-'}, ${evento.bairro || ''}, ${evento.cidade || ''} - ${evento.estado || ''}</p>
-    ${evento.place_url ? `<p><a href="${evento.place_url}" target="_blank" class="btn btn-sm btn-primary">Abrir no Google Maps</a></p>` : ''}
-  `;
+        <p><strong>Nome:</strong> ${evento.nome || '-'}</p>
+        <p><strong>Cliente:</strong> ${evento.cliente_nome || '-'}</p>
+        <p><strong>Capacidade:</strong> ${evento.capacidade ?? '-'}</p>
+        <p><strong>Datas:</strong>
+            ${evento.data_inicio ? formatarData(evento.data_inicio) : '-'}
+            até
+            ${evento.data_fim ? formatarData(evento.data_fim) : '-'}
+        </p>
+        <p><strong>Local:</strong> ${evento.local || '-'}</p>
+        <p><strong>Endereço:</strong>
+            ${(evento.endereco || '-')},
+            ${(evento.bairro || '')},
+            ${(evento.cidade || '')} - ${(evento.estado || '')}
+        </p>
+        ${evento.place_url
+            ? `<p><a href="${evento.place_url}" target="_blank" class="btn btn-sm btn-primary">Abrir no Google Maps</a></p>`
+            : ''
+        }
+    `;
+
         $('#dadosEventoContainer').html(html);
 
-        // Reset tabela ordens
-        $('#tabelaOrdens tbody').html('<tr><td colspan="5">Carregando...</td></tr>');
+        // --- Reset tabela Ordens ---
+        const tabelaBody = $('#tabelaOrdens tbody');
+        tabelaBody.html('<tr><td colspan="5" class="text-center">Carregando...</td></tr>');
 
-        // Carregar ordens de serviço
+        // --- Carregar Ordens de Serviço pelo evento ---
         axios.post(baseUrl, {
             method: 'listOrders',
             token,
             data: { evento_id: evento.id }
-        }).then(res => {
-            const ordens = res.data || [];
-            if (ordens.length === 0) {
-                return $('#tabelaOrdens tbody').html('<tr><td colspan="5">Nenhuma OS encontrada.</td></tr>');
-            }
-            const linhas = ordens.map(o => `
-      <tr>
-        <td>${o.documento}</td>
-        <td>${formatarData(o.data_montagem)}</td>
-        <td>${formatarData(o.data_recolhimento)}</td>
-        <td>${o.contato_montagem}</td>
-        <td>${o.local_montagem || o.endereco}</td>
-      </tr>
-    `).join('');
-            $('#tabelaOrdens tbody').html(linhas);
-        }).catch(() => {
-            $('#tabelaOrdens tbody').html('<tr><td colspan="5">Erro ao carregar ordens.</td></tr>');
-        });
+        })
+            .then(res => {
+                const ordens = res.data?.orders || res.data || [];
 
+                if (!Array.isArray(ordens) || ordens.length === 0) {
+                    tabelaBody.html('<tr><td colspan="5" class="text-center">Nenhuma OS encontrada.</td></tr>');
+                    return;
+                }
+
+                const linhas = ordens.map(o => `
+            <tr>
+                <td>${o.documento || '-'}</td>
+                <td>${o.data_montagem ? formatarData(o.data_montagem) : '-'}</td>
+                <td>${o.data_recolhimento ? formatarData(o.data_recolhimento) : '-'}</td>
+                <td>${o.contato_montagem || '-'}</td>
+                <td>${o.local_montagem || o.endereco || '-'}</td>
+            </tr>
+        `).join('');
+
+                tabelaBody.html(linhas);
+            })
+            .catch(err => {
+                console.error(err);
+                tabelaBody.html('<tr><td colspan="5" class="text-center text-danger">Erro ao carregar ordens.</td></tr>');
+            });
+
+        // --- Mostrar modal ---
         $('#eventoModal').modal('show');
     }
 
@@ -286,6 +309,26 @@
         const d = new Date(data);
         return d.toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'});
     }
+
+    $(document).on('click', '.btn-ver-detalhes', async function () {
+        const eventoId = $(this).data('id');
+
+        try {
+            const res = await axios.post(baseUrl, {
+                method: 'getEventDetails',
+                token,
+                data: { id: eventoId }
+            });
+
+            // Aqui assumindo que a API retorna como { event: {...} }
+            abrirModalDetalhes(res.data.event);
+
+        } catch (err) {
+            console.error(err);
+            Swal.fire('Erro', 'Não foi possível carregar os detalhes do evento.', 'error');
+        }
+    });
+
 </script>
 
 </body>

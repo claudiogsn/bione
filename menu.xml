@@ -25,6 +25,10 @@
   <menuitem label="Eventos">
     <icon>fas:calendar-alt fa-fw</icon>
     <menu>
+      <menuitem label="Freelancers">
+        <action>AdminFreelancerEvento</action>
+        <icon>fas:info-circle fa-fw</icon>
+      </menuitem>
       <menuitem label="Eventos">
         <action>EventoList</action>
         <icon>fas:bullhorn fa-fw</icon>

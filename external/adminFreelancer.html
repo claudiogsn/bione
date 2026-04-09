@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciar Freelancers - Bione</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { inter: ['Inter'] }, colors: { bione: '#F4AA48', bioneD: '#E09530', mrkGreen: '#08A794' } } }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+<!-- Header -->
+<div class="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-9 h-9 bg-bione rounded-lg flex items-center justify-center text-white font-bold text-sm">B</div>
+            <div>
+                <h1 class="text-lg font-bold text-gray-900 leading-tight">Freelancers</h1>
+                <p class="text-xs text-gray-500">Gerenciamento de parceiros</p>
+            </div>
+        </div>
+        <a href="adminFreelancerEvento.html" class="text-sm text-bione font-semibold hover:underline flex items-center gap-1">
+            <i class="fas fa-calendar-alt"></i> Freelancers por Evento
+        </a>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Total</p>
+            <p id="kpi-total" class="text-2xl font-bold text-gray-900">-</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Ativos</p>
+            <p id="kpi-ativos" class="text-2xl font-bold text-mrkGreen">-</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Inativos</p>
+            <p id="kpi-inativos" class="text-2xl font-bold text-red-400">-</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Exibindo</p>
+            <p id="kpi-exibindo" class="text-2xl font-bold text-bione">-</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 mt-4">
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="flex flex-col sm:flex-row gap-3">
+            <div class="flex-1">
+                <label class="text-xs font-semibold text-gray-500 mb-1 block">Buscar</label>
+                <div class="relative">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+                    <input type="text" id="filtro-busca" placeholder="Nome, e-mail ou CPF..."
+                           class="w-full pl-9 pr-4 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-bione focus:ring-1 focus:ring-bione">
+                </div>
+            </div>
+            <div class="w-full sm:w-40">
+                <label class="text-xs font-semibold text-gray-500 mb-1 block">Status</label>
+                <select id="filtro-status" class="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-bione">
+                    <option value="">Todos</option>
+                    <option value="1">Ativos</option>
+                    <option value="0">Inativos</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button onclick="carregarFreelancers()" class="bg-bione hover:bg-bioneD text-white font-semibold px-5 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
+                    <i class="fas fa-search"></i> Filtrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 mt-4 mb-10">
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th class="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider">Freelancer</th>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden sm:table-cell">CPF</th>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden md:table-cell">Telefone</th>
+                    <th class="text-center px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider">Eventos</th>
+                    <th class="text-right px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden sm:table-cell">Pago</th>
+                    <th class="text-right px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden md:table-cell">Previsto</th>
+                    <th class="text-center px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider">Status</th>
+                    <th class="text-center px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider w-24">Ações</th>
+                </tr>
+                </thead>
+                <tbody id="tabela-body">
+                <tr><td colspan="8" class="text-center py-10 text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Carregando...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detalhes -->
+<div id="modal-overlay" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onclick="fecharModal(event)">
+    <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl" onclick="event.stopPropagation()">
+        <div class="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex justify-between items-center rounded-t-2xl">
+            <h3 class="font-bold text-lg">Detalhes do Freelancer</h3>
+            <button onclick="fecharModal()" class="text-gray-400 hover:text-gray-600 text-xl"><i class="fas fa-times"></i></button>
+        </div>
+        <div id="modal-body" class="px-6 py-5 space-y-4">
+        </div>
+    </div>
+</div>
+
+<script>
+
+    const API = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/terceiros/ajax_admin.php'
+        : 'http://localhost/bione/terceiros/ajax_admin.php';
+
+    async function api(action, payload = {}) {
+        const res = await fetch(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ...payload })
+        });
+        return res.json();
+    }
+
+    function moeda(v) {
+        return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function iniciais(nome) {
+        if (!nome) return '??';
+        return nome.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+    }
+
+    // ===== CARREGAR =====
+    async function carregarFreelancers() {
+        const busca = document.getElementById('filtro-busca').value;
+        const status = document.getElementById('filtro-status').value;
+
+        const data = await api('list_freelancers', { busca, status });
+        if (data.error) return Swal.fire('Erro', data.error, 'error');
+
+        const { freelancers, kpi } = data;
+
+        // KPIs
+        document.getElementById('kpi-total').textContent = kpi.total || 0;
+        document.getElementById('kpi-ativos').textContent = kpi.ativos || 0;
+        document.getElementById('kpi-inativos').textContent = kpi.inativos || 0;
+        document.getElementById('kpi-exibindo').textContent = freelancers.length;
+
+        // Tabela
+        const tbody = document.getElementById('tabela-body');
+        if (freelancers.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-gray-400"><i class="fas fa-user-slash mr-2"></i>Nenhum freelancer encontrado.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = freelancers.map(f => {
+            const ativo = f.ativo == 1;
+            const statusBadge = ativo
+                ? '<span class="badge bg-emerald-100 text-emerald-700">Ativo</span>'
+                : '<span class="badge bg-red-100 text-red-600">Inativo</span>';
+
+            const avatarColor = ativo ? 'bg-bione' : 'bg-gray-400';
+
+            return `
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition cursor-pointer" onclick="abrirDetalhes(${f.id})">
+            <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 ${avatarColor} text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">${iniciais(f.nome)}</div>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-gray-900 truncate">${f.nome}</p>
+                        <p class="text-xs text-gray-400 truncate">${f.email}</p>
+                    </div>
+                </div>
+            </td>
+            <td class="px-4 py-3 text-gray-600 hidden sm:table-cell">${f.cpf}</td>
+            <td class="px-4 py-3 text-gray-600 hidden md:table-cell">${f.telefone}</td>
+            <td class="px-4 py-3 text-center"><span class="bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs font-bold">${f.total_eventos}</span></td>
+            <td class="px-4 py-3 text-right text-mrkGreen font-semibold hidden sm:table-cell">${moeda(f.total_pago)}</td>
+            <td class="px-4 py-3 text-right text-bione font-semibold hidden md:table-cell">${moeda(f.total_previsto)}</td>
+            <td class="px-4 py-3 text-center">${statusBadge}</td>
+            <td class="px-4 py-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                    <button onclick="event.stopPropagation(); toggleAtivo(${f.id}, ${ativo ? 0 : 1})" title="${ativo ? 'Desativar' : 'Ativar'}"
+                        class="w-8 h-8 rounded-lg ${ativo ? 'hover:bg-red-50 text-red-400' : 'hover:bg-green-50 text-green-500'} flex items-center justify-center transition">
+                        <i class="fas ${ativo ? 'fa-ban' : 'fa-check-circle'}"></i>
+                    </button>
+                    <button onclick="event.stopPropagation(); deletarFreelancer(${f.id}, '${f.nome.replace(/'/g, "\\'")}')" title="Excluir"
+                        class="w-8 h-8 rounded-lg hover:bg-red-50 text-red-400 flex items-center justify-center transition">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+        }).join('');
+    }
+
+    // ===== TOGGLE ATIVO =====
+    async function toggleAtivo(id, ativo) {
+        const res = await api('toggle_freelancer', { freelancer_id: id, ativo });
+        if (res.success) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: ativo ? 'Ativado' : 'Desativado', showConfirmButton: false, timer: 1500 });
+            carregarFreelancers();
+        }
+    }
+
+    // ===== DELETAR =====
+    async function deletarFreelancer(id, nome) {
+        const result = await Swal.fire({
+            title: 'Excluir freelancer?',
+            html: `<strong>${nome}</strong> será removido permanentemente.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#E34F57',
+            confirmButtonText: 'Sim, excluir',
+            cancelButtonText: 'Cancelar'
+        });
+        if (!result.isConfirmed) return;
+
+        const res = await api('delete_freelancer', { freelancer_id: id });
+        if (res.success) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Excluído', showConfirmButton: false, timer: 1500 });
+            carregarFreelancers();
+        }
+    }
+
+    // ===== MODAL DETALHES =====
+    async function abrirDetalhes(id) {
+        const data = await api('list_freelancers', { busca: '', status: '' });
+        const f = data.freelancers.find(x => x.id == id);
+        if (!f) return;
+
+        document.getElementById('modal-body').innerHTML = `
+        <div class="flex items-center gap-4 mb-4">
+            <div class="w-14 h-14 ${f.ativo == 1 ? 'bg-bione' : 'bg-gray-400'} text-white rounded-full flex items-center justify-center text-xl font-bold">${iniciais(f.nome)}</div>
+            <div>
+                <h4 class="font-bold text-lg">${f.nome}</h4>
+                <p class="text-sm text-gray-400">${f.email}</p>
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div><p class="text-[10px] font-bold uppercase text-gray-400 mb-1">CPF</p><p class="font-semibold">${f.cpf}</p></div>
+            <div><p class="text-[10px] font-bold uppercase text-gray-400 mb-1">Telefone</p><p class="font-semibold">${f.telefone}</p></div>
+            <div><p class="text-[10px] font-bold uppercase text-gray-400 mb-1">Nascimento</p><p class="font-semibold">${f.data_nascimento || '-'}</p></div>
+            <div><p class="text-[10px] font-bold uppercase text-gray-400 mb-1">Status</p><p class="font-semibold">${f.ativo == 1 ? '🟢 Ativo' : '🔴 Inativo'}</p></div>
+        </div>
+        <div class="border-t border-gray-100 pt-4 mt-4">
+            <p class="text-[10px] font-bold uppercase text-gray-400 mb-1">Chave Pix (${(f.tipo_chave_pix || '').toUpperCase()})</p>
+            <p class="font-semibold">${f.chave_pix}</p>
+        </div>
+        <div class="grid grid-cols-3 gap-3 border-t border-gray-100 pt-4 mt-4">
+            <div class="text-center"><p class="text-[10px] font-bold uppercase text-gray-400 mb-1">Eventos</p><p class="text-xl font-bold">${f.total_eventos}</p></div>
+            <div class="text-center"><p class="text-[10px] font-bold uppercase text-gray-400 mb-1">Pago</p><p class="text-xl font-bold text-mrkGreen">${moeda(f.total_pago)}</p></div>
+            <div class="text-center"><p class="text-[10px] font-bold uppercase text-gray-400 mb-1">Previsto</p><p class="text-xl font-bold text-bione">${moeda(f.total_previsto)}</p></div>
+        </div>
+    `;
+        document.getElementById('modal-overlay').classList.remove('hidden');
+    }
+
+    function fecharModal(e) {
+        if (!e || e.target === document.getElementById('modal-overlay')) {
+            document.getElementById('modal-overlay').classList.add('hidden');
+        }
+    }
+
+    // ===== FILTRO POR ENTER =====
+    document.getElementById('filtro-busca').addEventListener('keydown', e => { if (e.key === 'Enter') carregarFreelancers(); });
+
+    // ===== INIT =====
+    carregarFreelancers();
+</script>
+</body>
+</html>

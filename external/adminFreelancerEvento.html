@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Freelancers do Evento - Bione</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://kit.fontawesome.com/313adf4cdc.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: { extend: { fontFamily: { inter: ['Inter'] }, colors: { bione: '#F4AA48', bioneD: '#E09530', mrkGreen: '#08A794' } } }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 min-h-screen">
+
+<!-- Header -->
+<div class="bg-white border-b border-gray-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <a href="admin_freelancers.html" class="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-200 transition">
+                <i class="fas fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-lg font-bold text-gray-900 leading-tight">Freelancers do Evento</h1>
+                <p id="header-evento" class="text-xs text-gray-500">Selecione um evento</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Seletor de Evento -->
+<div class="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+        <div class="flex flex-col sm:flex-row gap-3">
+            <div class="flex-1">
+                <label class="text-xs font-semibold text-gray-500 mb-1 block">Evento</label>
+                <select id="select-evento" onchange="selecionarEvento()"
+                        class="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-bione">
+                    <option value="">Carregando eventos...</option>
+                </select>
+            </div>
+            <div class="flex items-end gap-2">
+                <button onclick="abrirConfigEvento()" id="btn-config" class="hidden bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold px-4 py-2.5 rounded-lg text-sm transition flex items-center gap-2">
+                    <i class="fas fa-cog"></i> Configurar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KPIs -->
+<div id="kpis-section" class="hidden max-w-7xl mx-auto px-4 sm:px-6 mt-4">
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Inscritos</p>
+            <p id="kpi-inscritos" class="text-2xl font-bold text-gray-900">-</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Aprovados</p>
+            <p id="kpi-aprovados" class="text-2xl font-bold text-mrkGreen">-</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Pendentes</p>
+            <p id="kpi-pendentes" class="text-2xl font-bold text-bione">-</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Vagas Restantes</p>
+            <p id="kpi-vagas" class="text-2xl font-bold text-blue-500">-</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Custo Base</p>
+            <p id="kpi-custo-base" class="text-xl font-bold text-gray-700">-</p>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 border-l-4 border-l-red-400">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-1">Custo Total</p>
+            <p id="kpi-custo-total" class="text-xl font-bold text-red-500">-</p>
+            <p id="kpi-extras" class="text-[10px] text-gray-400 mt-1">-</p>
+        </div>
+    </div>
+</div>
+
+<!-- Info do Evento -->
+<div id="evento-info" class="hidden max-w-7xl mx-auto px-4 sm:px-6 mt-4">
+    <div class="bg-gradient-to-r from-gray-900 to-gray-800 rounded-xl p-5 text-white">
+        <div class="flex flex-col sm:flex-row justify-between gap-3">
+            <div>
+                <h3 id="info-nome" class="font-bold text-lg"></h3>
+                <p id="info-local" class="text-sm text-gray-300 mt-1"></p>
+            </div>
+            <div class="flex gap-4 text-sm">
+                <div><p class="text-gray-400 text-[10px] uppercase font-bold">Data</p><p id="info-data" class="font-semibold">-</p></div>
+                <div><p class="text-gray-400 text-[10px] uppercase font-bold">Valor/Freela</p><p id="info-valor" class="font-semibold text-bione">-</p></div>
+                <div><p class="text-gray-400 text-[10px] uppercase font-bold">Vagas</p><p id="info-vagas" class="font-semibold">-</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela Freelancers -->
+<div id="tabela-section" class="hidden max-w-7xl mx-auto px-4 sm:px-6 mt-4 mb-10">
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                <tr class="bg-gray-50 border-b border-gray-200">
+                    <th class="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider">Freelancer</th>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden sm:table-cell">Telefone</th>
+                    <th class="text-left px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider hidden md:table-cell">Pix</th>
+                    <th class="text-right px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider">Extra</th>
+                    <th class="text-center px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider">Status</th>
+                    <th class="text-center px-4 py-3 font-semibold text-gray-500 text-xs uppercase tracking-wider w-32">Ações</th>
+                </tr>
+                </thead>
+                <tbody id="tabela-freelas">
+                <tr><td colspan="6" class="text-center py-10 text-gray-400">Selecione um evento acima.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Config Evento -->
+<div id="modal-config" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onclick="fecharConfig(event)">
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl" onclick="event.stopPropagation()">
+        <div class="border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+            <h3 class="font-bold text-lg">Configurar Evento (Freelancer)</h3>
+            <button onclick="fecharConfig()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="px-6 py-5 space-y-4">
+            <div>
+                <label class="text-xs font-semibold text-gray-500 mb-1 block">Vagas para Freelancers</label>
+                <input type="number" id="cfg-vagas" min="0" class="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-bione">
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500 mb-1 block">Valor por Freelancer (R$)</label>
+                <input type="number" id="cfg-valor" min="0" step="0.01" class="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-bione">
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500 mb-1 block">Status para Freelancers</label>
+                <select id="cfg-status" class="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-bione">
+                    <option value="aberto">Aberto</option>
+                    <option value="fechado">Fechado</option>
+                    <option value="cancelado">Cancelado</option>
+                    <option value="finalizado">Finalizado</option>
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500 mb-1 block">Descrição para Portal</label>
+                <textarea id="cfg-descricao" rows="3" class="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-bione resize-none" placeholder="Descrição visível no portal do freelancer..."></textarea>
+            </div>
+            <button onclick="salvarConfigEvento()" class="w-full bg-bione hover:bg-bioneD text-white font-semibold py-3 rounded-lg transition">
+                Salvar Configuração
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Valor Extra -->
+<div id="modal-extra" class="hidden fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onclick="fecharExtra(event)">
+    <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl" onclick="event.stopPropagation()">
+        <div class="border-b border-gray-100 px-6 py-4 flex justify-between items-center">
+            <h3 class="font-bold text-lg">Valor Extra</h3>
+            <button onclick="fecharExtra()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="px-6 py-5 space-y-4">
+            <p id="extra-nome" class="font-semibold text-gray-700"></p>
+            <div>
+                <label class="text-xs font-semibold text-gray-500 mb-1 block">Valor Extra (R$)</label>
+                <input type="number" id="extra-valor" min="0" step="0.01" class="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-bione">
+            </div>
+            <div>
+                <label class="text-xs font-semibold text-gray-500 mb-1 block">Observação</label>
+                <input type="text" id="extra-obs" class="w-full py-2.5 px-3 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-bione" placeholder="Motivo do extra...">
+            </div>
+            <input type="hidden" id="extra-inscricao-id">
+            <button onclick="salvarExtra()" class="w-full bg-bione hover:bg-bioneD text-white font-semibold py-3 rounded-lg transition">
+                Salvar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = window.location.hostname !== 'localhost'
+        ? 'https://bionetecnologia.com.br/crm/terceiros/ajax_admin.php'
+        : 'http://localhost/bione/terceiros/ajax_admin.php';
+    let eventoAtual = null;
+
+    async function api(action, payload = {}) {
+        const res = await fetch(API, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action, ...payload })
+        });
+        return res.json();
+    }
+
+    function moeda(v) {
+        return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+    function iniciais(nome) {
+        if (!nome) return '??';
+        return nome.split(' ').filter(Boolean).slice(0, 2).map(p => p[0]).join('').toUpperCase();
+    }
+    function dataFmt(d) {
+        if (!d) return '-';
+        return new Date(d).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+
+    // ===== CARREGAR EVENTOS =====
+    async function carregarEventos() {
+        const data = await api('list_eventos');
+        const sel = document.getElementById('select-evento');
+        sel.innerHTML = '<option value="">-- Selecione um evento --</option>';
+        (data.eventos || []).forEach(e => {
+            const dt = e.data_inicio ? new Date(e.data_inicio).toLocaleDateString('pt-BR') : '';
+            sel.innerHTML += `<option value="${e.id}">${e.nome} — ${dt} (${e.cidade || ''}/${e.estado || ''})</option>`;
+        });
+
+        // Check URL param
+        const params = new URLSearchParams(window.location.search);
+        const eid = params.get('evento_id');
+        if (eid) {
+            sel.value = eid;
+            selecionarEvento();
+        }
+    }
+
+    // ===== SELECIONAR EVENTO =====
+    async function selecionarEvento() {
+        const eid = document.getElementById('select-evento').value;
+        if (!eid) {
+            document.getElementById('kpis-section').classList.add('hidden');
+            document.getElementById('evento-info').classList.add('hidden');
+            document.getElementById('tabela-section').classList.add('hidden');
+            document.getElementById('btn-config').classList.add('hidden');
+            return;
+        }
+
+        const data = await api('get_evento_freelancers', { evento_id: eid });
+        if (data.error) return Swal.fire('Erro', data.error, 'error');
+
+        eventoAtual = data.evento;
+        const { kpi, inscritos } = data;
+
+        // Header
+        document.getElementById('header-evento').textContent = data.evento.nome;
+
+        // Show sections
+        document.getElementById('kpis-section').classList.remove('hidden');
+        document.getElementById('evento-info').classList.remove('hidden');
+        document.getElementById('tabela-section').classList.remove('hidden');
+        document.getElementById('btn-config').classList.remove('hidden');
+
+        // KPIs
+        document.getElementById('kpi-inscritos').textContent = kpi.total_inscritos;
+        document.getElementById('kpi-aprovados').textContent = kpi.total_aprovados;
+        document.getElementById('kpi-pendentes').textContent = kpi.total_pendentes;
+        document.getElementById('kpi-vagas').textContent = kpi.vagas_restantes;
+        document.getElementById('kpi-custo-base').textContent = moeda(kpi.custo_base);
+        document.getElementById('kpi-custo-total').textContent = moeda(kpi.custo_total);
+        document.getElementById('kpi-extras').textContent = kpi.custo_extras > 0 ? `(inclui ${moeda(kpi.custo_extras)} em extras)` : 'sem extras';
+
+        // Evento info
+        const ev = data.evento;
+        document.getElementById('info-nome').textContent = ev.nome;
+        document.getElementById('info-local').innerHTML = `<i class="fas fa-map-marker-alt mr-1"></i>${ev.local || ''} — ${ev.cidade || ''}, ${ev.estado || ''}`;
+        document.getElementById('info-data').textContent = dataFmt(ev.data_inicio);
+        document.getElementById('info-valor').textContent = moeda(ev.valor_freelancer);
+        document.getElementById('info-vagas').textContent = ev.vagas_freelancer;
+
+        // Tabela
+        const tbody = document.getElementById('tabela-freelas');
+        if (inscritos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-gray-400"><i class="fas fa-user-slash mr-2"></i>Nenhum freelancer inscrito neste evento.</td></tr>';
+            return;
+        }
+
+        const statusColors = {
+            pendente: 'bg-yellow-100 text-yellow-700',
+            aprovado: 'bg-emerald-100 text-emerald-700',
+            recusado: 'bg-red-100 text-red-600',
+            cancelado: 'bg-gray-100 text-gray-500'
+        };
+
+        tbody.innerHTML = inscritos.map(i => {
+            const sc = statusColors[i.inscricao_status] || 'bg-gray-100 text-gray-500';
+            const extraLabel = parseFloat(i.valor_extra) > 0
+                ? `<span class="text-red-500 font-bold">${moeda(i.valor_extra)}</span>`
+                : '<span class="text-gray-300">—</span>';
+            const obsTooltip = i.observacao ? `title="${i.observacao}"` : '';
+
+            return `
+        <tr class="border-b border-gray-100 hover:bg-gray-50 transition">
+            <td class="px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-bione text-white rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0">${iniciais(i.nome)}</div>
+                    <div class="min-w-0">
+                        <p class="font-semibold text-gray-900 truncate">${i.nome}</p>
+                        <p class="text-xs text-gray-400 truncate">${i.email}</p>
+                    </div>
+                </div>
+            </td>
+            <td class="px-4 py-3 text-gray-600 hidden sm:table-cell">${i.telefone}</td>
+            <td class="px-4 py-3 text-gray-600 hidden md:table-cell">
+                <span class="text-xs">${(i.tipo_chave_pix || '').toUpperCase()}: ${i.chave_pix}</span>
+            </td>
+            <td class="px-4 py-3 text-right" ${obsTooltip}>${extraLabel}</td>
+            <td class="px-4 py-3 text-center">
+                <select onchange="alterarStatus(${i.inscricao_id}, this.value)" class="text-xs py-1 px-2 rounded-lg border border-gray-200 focus:outline-none focus:border-bione ${sc}">
+                    <option value="pendente" ${i.inscricao_status === 'pendente' ? 'selected' : ''}>Pendente</option>
+                    <option value="aprovado" ${i.inscricao_status === 'aprovado' ? 'selected' : ''}>Aprovado</option>
+                    <option value="recusado" ${i.inscricao_status === 'recusado' ? 'selected' : ''}>Recusado</option>
+                    <option value="cancelado" ${i.inscricao_status === 'cancelado' ? 'selected' : ''}>Cancelado</option>
+                </select>
+            </td>
+            <td class="px-4 py-3 text-center">
+                <div class="flex items-center justify-center gap-1">
+                    <button onclick="abrirExtra(${i.inscricao_id}, '${i.nome.replace(/'/g, "\\'")}', ${i.valor_extra || 0}, '${(i.observacao || '').replace(/'/g, "\\'")}')" title="Valor Extra"
+                        class="w-8 h-8 rounded-lg hover:bg-bione/10 text-bione flex items-center justify-center transition">
+                        <i class="fas fa-dollar-sign"></i>
+                    </button>
+                    <button onclick="removerInscricao(${i.inscricao_id}, '${i.nome.replace(/'/g, "\\'")}')" title="Remover"
+                        class="w-8 h-8 rounded-lg hover:bg-red-50 text-red-400 flex items-center justify-center transition">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+        }).join('');
+    }
+
+    // ===== ALTERAR STATUS =====
+    async function alterarStatus(inscricaoId, status) {
+        const res = await api('update_inscricao_status', { inscricao_id: inscricaoId, status });
+        if (res.success) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Status atualizado', showConfirmButton: false, timer: 1200 });
+            selecionarEvento();
+        }
+    }
+
+    // ===== REMOVER =====
+    async function removerInscricao(inscricaoId, nome) {
+        const result = await Swal.fire({
+            title: 'Remover inscrição?',
+            html: `<strong>${nome}</strong> será removido deste evento.`,
+            icon: 'warning', showCancelButton: true, confirmButtonColor: '#E34F57',
+            confirmButtonText: 'Sim, remover', cancelButtonText: 'Cancelar'
+        });
+        if (!result.isConfirmed) return;
+
+        const res = await api('remove_inscricao', { inscricao_id: inscricaoId });
+        if (res.success) {
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Removido', showConfirmButton: false, timer: 1500 });
+            selecionarEvento();
+        }
+    }
+
+    // ===== MODAL EXTRA =====
+    function abrirExtra(inscricaoId, nome, valor, obs) {
+        document.getElementById('extra-nome').textContent = nome;
+        document.getElementById('extra-valor').value = valor || 0;
+        document.getElementById('extra-obs').value = obs || '';
+        document.getElementById('extra-inscricao-id').value = inscricaoId;
+        document.getElementById('modal-extra').classList.remove('hidden');
+    }
+    function fecharExtra(e) {
+        if (!e || e.target === document.getElementById('modal-extra'))
+            document.getElementById('modal-extra').classList.add('hidden');
+    }
+    async function salvarExtra() {
+        const inscricaoId = document.getElementById('extra-inscricao-id').value;
+        const valorExtra = parseFloat(document.getElementById('extra-valor').value) || 0;
+        const obs = document.getElementById('extra-obs').value;
+
+        const res = await api('update_valor_extra', { inscricao_id: inscricaoId, valor_extra: valorExtra, observacao: obs });
+        if (res.success) {
+            fecharExtra();
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Extra salvo', showConfirmButton: false, timer: 1200 });
+            selecionarEvento();
+        }
+    }
+
+    // ===== MODAL CONFIG EVENTO =====
+    function abrirConfigEvento() {
+        if (!eventoAtual) return;
+        document.getElementById('cfg-vagas').value = eventoAtual.vagas_freelancer || 0;
+        document.getElementById('cfg-valor').value = eventoAtual.valor_freelancer || 0;
+        document.getElementById('cfg-status').value = eventoAtual.status_freelancer || 'aberto';
+        document.getElementById('cfg-descricao').value = eventoAtual.descricao_freelancer || '';
+        document.getElementById('modal-config').classList.remove('hidden');
+    }
+    function fecharConfig(e) {
+        if (!e || e.target === document.getElementById('modal-config'))
+            document.getElementById('modal-config').classList.add('hidden');
+    }
+    async function salvarConfigEvento() {
+        if (!eventoAtual) return;
+        const res = await api('update_evento_freelancer_config', {
+            evento_id: eventoAtual.id,
+            vagas_freelancer: parseInt(document.getElementById('cfg-vagas').value) || 0,
+            valor_freelancer: parseFloat(document.getElementById('cfg-valor').value) || 0,
+            status_freelancer: document.getElementById('cfg-status').value,
+            descricao_freelancer: document.getElementById('cfg-descricao').value
+        });
+        if (res.success) {
+            fecharConfig();
+            Swal.fire({ toast: true, position: 'top-end', icon: 'success', title: 'Configuração salva', showConfirmButton: false, timer: 1500 });
+            selecionarEvento();
+        }
+    }
+
+    // ===== INIT =====
+    carregarEventos();
+</script>
+</body>
+</html>

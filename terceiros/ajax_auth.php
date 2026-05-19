@@ -194,7 +194,6 @@ try {
                    e.vagas_freelancer, e.valor_freelancer, e.status_freelancer
             FROM evento e
             WHERE e.status_freelancer = 'aberto'
-            AND e.data_inicio > NOW()
             AND e.id NOT IN (SELECT evento_id FROM inscricao_evento WHERE freelancer_id = ? AND status != 'cancelado')
             ORDER BY e.data_inicio ASC
         ");
@@ -207,7 +206,7 @@ try {
                    ie.status as inscricao_status, ie.id as inscricao_id
             FROM inscricao_evento ie
             JOIN evento e ON ie.evento_id = e.id
-            WHERE ie.freelancer_id = ? AND ie.status != 'cancelado'
+            WHERE ie.freelancer_id = ? AND ie.status not in ('cancelado','finalizado')
             ORDER BY e.data_inicio ASC
         ");
         $stmt->execute([$fid]);

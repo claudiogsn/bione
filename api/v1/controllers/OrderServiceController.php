@@ -512,7 +512,7 @@ class OrderServiceController
         <body>
         <div class="header">
             <div style='position: absolute; top: 0; right: 0;'>
-                <img src="https://bionetecnologia.com.br/crm/external/imagens/logo_os.png" alt="Logo Bione">
+                <img src="https://bionetecnologia.com.br/external/imagens/logo_os.png" alt="Logo Bione">
             </div>
             <div>
                 <h2>Ordem de Serviço</h2>
@@ -623,7 +623,7 @@ class OrderServiceController
         $safeCliente = preg_replace('/[^a-zA-Z0-9]/', '_', $cliente['nome']);
         $fileName = 'OS_' . $safeCliente . '_' . $order['documento'] . '.pdf';
         $filePath = __DIR__ . '/../public/orders/' . $fileName;
-        $publicUrl = 'https://bionetecnologia.com.br/crm/api/v1/public/orders/' . $fileName;
+        $publicUrl = 'https://bionetecnologia.com.br/api/v1/public/orders/' . $fileName;
 
         if (!is_dir(dirname($filePath))) {
             mkdir(dirname($filePath), 0777, true);
@@ -700,7 +700,7 @@ class OrderServiceController
         <body>
         <div class="header">
             <div style='position: absolute; top: 0; right: 0;'>
-                <img src="https://bionetecnologia.com.br/crm/external/imagens/logo_os.png" alt="Logo Bione">
+                <img src="https://bionetecnologia.com.br/external/imagens/logo_os.png" alt="Logo Bione">
             </div>
             <div>
                 <h2>Proposta de Locação</h2>
@@ -803,7 +803,7 @@ class OrderServiceController
         $safeCliente = preg_replace('/[^a-zA-Z0-9]/', '_', $cliente['nome']);
         $fileName = 'PROPOSTA_' . $safeCliente . '_' . $order['documento'] . '.pdf';
         $filePath = __DIR__ . '/../public/proposta/' . $fileName;
-        $publicUrl = 'https://bionetecnologia.com.br/crm/api/v1/public/proposta/' . $fileName;
+        $publicUrl = 'https://bionetecnologia.com.br/api/v1/public/proposta/' . $fileName;
 
         if (!is_dir(dirname($filePath))) {
             mkdir(dirname($filePath), 0777, true);

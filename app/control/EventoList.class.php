@@ -18,7 +18,7 @@ class EventoList extends TPage
         if ($_SERVER['SERVER_NAME'] == "localhost") {
             $link = "http://localhost/bione/external/listEventos.html?username={$username}&token={$token}";
         } else {
-            $link = "https://bionetecnologia.com.br/crm/external/listEventos.html?username={$username}&token={$token}";
+            $link = "https://bionetecnologia.com.br/external/listEventos.html?username={$username}&token={$token}";
         }
 
         $iframe = new TElement('iframe');

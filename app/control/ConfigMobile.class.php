@@ -14,7 +14,7 @@ class ConfigMobile extends TPage
         if($_SERVER['SERVER_NAME'] == "localhost"){
             $link = "http://localhost/bione/external/listMenuMobile.html?token={$token}";
         }else{
-            $link = "https://bionetecnologia.com.br/crm/external/listMenuMobile.html?token={$token}";
+            $link = "https://bionetecnologia.com.br/external/listMenuMobile.html?token={$token}";
         }
 
         $iframe = new TElement('iframe');

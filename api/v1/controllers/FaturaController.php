@@ -453,7 +453,7 @@ class FaturaController
         $safeCliente = preg_replace('/[^a-zA-Z0-9]/', '_', $cliente);
         $fileName = 'Fatura_' . $safeCliente . '_' . $numero_fatura . '.pdf';
         $filePath = __DIR__ . '/../public/invoices/' . $fileName;
-        $publicUrl = 'https://bionetecnologia.com.br/crm/api/v1/public/invoices/' . $fileName;
+        $publicUrl = 'https://bionetecnologia.com.br/api/v1/public/invoices/' . $fileName;
 
         if (!is_dir(dirname($filePath))) {
             mkdir(dirname($filePath), 0777, true);

@@ -13,7 +13,7 @@ class ClienteForm extends TPage
         if ($_SERVER['SERVER_NAME'] == "localhost") {
             $link = "http://localhost/bione/external/createCliente.html?username={$username}&token={$token}";
         } else {
-            $link = "https://bionetecnologia.com.br/crm/external/createCliente.html?username={$username}&token={$token}";
+            $link = "https://bionetecnologia.com.br/external/createCliente.html?username={$username}&token={$token}";
         }
 
         $iframe = new TElement('iframe');

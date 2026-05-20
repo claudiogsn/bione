@@ -76,7 +76,7 @@
 
 <script>
     const requestToken = new URLSearchParams(window.location.search).get('token');
-    const baseUrl = window.location.hostname !== 'localhost' ? 'https://binetecnologia.com.br/crm' : 'http://localhost/bione';
+    const baseUrl = window.location.hostname !== 'localhost' ? 'https://binetecnologia.com.br' : 'http://localhost/bione';
 
     // Function to fetch data from API
     async function fetchData(method) {

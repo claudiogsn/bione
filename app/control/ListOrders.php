@@ -13,7 +13,7 @@ class ListOrders extends TPage
         if($_SERVER['SERVER_NAME'] == "localhost"){
             $link = "http://localhost/bione/external/listOrdem.html?user={$userid}&token={$token}";
         }else{
-            $link = "https://bionetecnologia.com.br/crm/external/listOrdem.html?user={$userid}&token={$token}";
+            $link = "https://bionetecnologia.com.br/external/listOrdem.html?user={$userid}&token={$token}";
         }
 
         $iframe = new TElement('iframe');
